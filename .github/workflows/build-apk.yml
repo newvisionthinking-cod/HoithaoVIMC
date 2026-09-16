@@ -1,4 +1,4 @@
-name: Tự Động Tạo File APK Android
+name: Build APK Android
 
 on:
   push:
@@ -24,27 +24,28 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: 4. Cài đặt thư viện & Tạo cấu hình Capacitor
+      - name: 4. Chuẩn bị thư mục web và cấu hình
         run: |
+          mkdir -p www
+          cp index.html www/
           npm install
-          # Tạo trước file cấu hình để Capacitor không đòi hỏi tương tác thủ công
           cat << 'EOF' > capacitor.config.json
           {
             "appId": "com.hoithao.vimc",
             "appName": "Hội Thao VIMC",
-            "webDir": "."
+            "webDir": "www"
           }
           EOF
           npx cap add android
           npx cap sync android
 
-      - name: 5. Cấp quyền & Biên dịch file APK
+      - name: 5. Biên dịch file APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: 6. Xuất bản file APK tải về
+      - name: 6. Tải file APK lên Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: HoiThao-VIMC-debug
