@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Quản Lý Chi Phí Hội Thao VIMC</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Firebase SDK v9 compat (Chỉ dùng Firestore hoàn toàn miễn phí) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  
+  <!-- Sử dụng Firebase v8.10.1 cực kỳ ổn định, tương thích 100% Web & Android APK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <!-- SheetJS xuất Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,11 +27,14 @@
           <span class="text-[10px] uppercase tracking-wider bg-blue-700 text-blue-100 px-2 py-0.5 rounded font-medium">Hội Thao VIMC</span>
           <h1 class="text-base sm:text-xl font-bold mt-0.5">Sổ Quản Lý Chi Phí Thể Thao</h1>
         </div>
-        <span class="text-[11px] bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-2 py-0.5 rounded-full flex items-center gap-1 sm:hidden">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Cloud
+        <span id="cloudBadge" class="text-[11px] bg-amber-500/20 text-amber-200 border border-amber-400/30 px-2 py-0.5 rounded-full flex items-center gap-1 sm:hidden">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Đang kết nối
         </span>
       </div>
       <div class="flex items-center gap-2">
+        <span id="cloudBadgeDesktop" class="hidden sm:flex text-xs bg-blue-900/60 text-amber-200 border border-amber-500/40 px-2.5 py-1 rounded-full items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Đang kiểm tra Cloud
+        </span>
         <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow flex items-center gap-1">
           📊 Excel
         </button>
@@ -51,7 +55,7 @@
         <p class="text-[11px] text-slate-400 mt-2">Nguồn kinh phí đã nhận</p>
       </div>
 
-      <!-- Tổng Đã Chi (Nhấn để bung phân rã) -->
+      <!-- Thẻ Tổng Đã Chi -->
       <div class="bg-white rounded-xl shadow-sm border border-rose-200 overflow-hidden">
         <button type="button" onclick="toggleExpenseBreakdown()" class="w-full p-4 text-left flex items-start justify-between bg-rose-50/40 hover:bg-rose-50/80 transition">
           <div>
@@ -83,7 +87,7 @@
       </div>
     </div>
 
-    <!-- Số Dư Còn Lại -->
+    <!-- Số Dư Còn Lại Banner -->
     <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 sm:p-5 rounded-2xl shadow-md mb-5 flex items-center justify-between">
       <div>
         <p class="text-xs uppercase font-medium text-blue-200 tracking-wider">Số Tiền Còn Lại</p>
@@ -103,7 +107,7 @@
         <button onclick="filterCategory('Khác')" id="tab-Khác" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">📋 Khác</button>
       </div>
 
-      <!-- Desktop View -->
+      <!-- Bảng Máy Tính -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-left text-sm">
           <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
@@ -122,7 +126,7 @@
         </table>
       </div>
 
-      <!-- Mobile View -->
+      <!-- Danh Sách Điện Thoại -->
       <div id="txListMobile" class="md:hidden divide-y divide-slate-100"></div>
 
       <div id="emptyState" class="hidden text-center py-12 text-slate-400">
@@ -131,7 +135,7 @@
     </div>
   </main>
 
-  <!-- Modal Nhập / Sửa -->
+  <!-- Modal Nhập / Sửa Giao Dịch -->
   <div id="modalForm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col">
       <div class="px-5 py-3.5 bg-slate-100 border-b border-slate-200 flex justify-between items-center shrink-0">
@@ -139,7 +143,7 @@
         <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
       </div>
 
-      <form id="txForm" onsubmit="handleFormSubmit(event)" class="p-4 sm:p-5 space-y-3 text-sm overflow-y-auto">
+      <div class="p-4 sm:p-5 space-y-3 text-sm overflow-y-auto">
         <input type="hidden" id="txId">
 
         <div class="grid grid-cols-2 gap-2.5">
@@ -162,35 +166,35 @@
 
         <div>
           <label class="block font-medium text-slate-700 mb-1 text-xs">Ngày Giao Dịch</label>
-          <input type="date" id="txDate" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+          <input type="date" id="txDate" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
         </div>
 
         <div>
           <label class="block font-medium text-slate-700 mb-1 text-xs">Chi Cho Ai / Người Nhận</label>
-          <input type="text" id="txPerson" placeholder="VD: Sân bóng, Cửa hàng thể thao, Nguyễn Văn A..." required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+          <input type="text" id="txPerson" placeholder="VD: Sân bóng, Cửa hàng thể thao, Nguyễn Văn A..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
         </div>
 
         <div>
           <label class="block font-medium text-slate-700 mb-1 text-xs">Nội Dung Chi</label>
-          <input type="text" id="txDescription" placeholder="VD: Tiền thuê sân tập, Nước uống, Bóng thi đấu..." required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+          <input type="text" id="txDescription" placeholder="VD: Tiền thuê sân tập, Nước uống, Bóng thi đấu..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
         </div>
 
         <div>
           <label class="block font-medium text-slate-700 mb-1 text-xs">Số Tiền (VNĐ)</label>
-          <input type="number" id="txAmount" placeholder="0" min="1000" step="1000" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold">
+          <input type="number" id="txAmount" placeholder="0" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold">
         </div>
 
-        <!-- Đính Kèm File Nén Trực Tiếp Lưu Đám Mây (Miễn Phí) -->
+        <!-- Tệp Đính Kèm -->
         <div class="border-t border-slate-200 pt-2.5">
           <div class="flex items-center justify-between mb-1">
             <label class="block font-semibold text-slate-700 text-xs">Tệp Đính Kèm (Tối đa 10 tệp)</label>
             <span id="fileCountBadge" class="text-[11px] text-slate-500">0/10 tệp</span>
           </div>
-          <p class="text-[11px] text-slate-400 mb-2">Chụp ảnh hóa đơn (.jpg, .png), PDF, Word (.doc, .docx)</p>
+          <p class="text-[11px] text-slate-400 mb-2">Ảnh hóa đơn (.jpg, .png), tài liệu PDF, Word</p>
 
           <label class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 p-3 rounded-xl cursor-pointer">
             <span class="text-xl">📷 / 📎</span>
-            <span class="text-[11px] font-semibold text-blue-600 mt-0.5">Bấm để chụp ảnh hoặc chọn tệp chứng từ</span>
+            <span class="text-[11px] font-semibold text-blue-600 mt-0.5">Bấm để chụp ảnh hoặc chọn tệp</span>
             <input type="file" id="txFileInput" multiple accept="image/*,.pdf,.doc,.docx" class="hidden" onchange="handleFileSelection(event)">
           </label>
 
@@ -198,14 +202,14 @@
         </div>
 
         <div class="pt-2 flex gap-2 border-t border-slate-200 shrink-0">
-          <button type="button" onclick="closeModal()" class="w-1/2 py-2 rounded-lg border border-slate-300 text-slate-600 font-medium">Hủy</button>
-          <button type="submit" id="submitBtn" class="w-1/2 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm">Lưu Dữ Liệu</button>
+          <button type="button" onclick="closeModal()" class="w-1/2 py-2.5 rounded-lg border border-slate-300 text-slate-600 font-medium hover:bg-slate-50">Hủy</button>
+          <button type="button" id="submitBtn" onclick="saveDataNow()" class="w-1/2 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition">Lưu Dữ Liệu</button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
-  <!-- Modal Xem File Phóng To / Tải Về -->
+  <!-- Modal Xem File -->
   <div id="viewModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white rounded-2xl max-w-xl w-full p-4 flex flex-col max-h-[90vh]">
       <div class="flex justify-between items-center pb-2 border-b border-slate-200">
@@ -221,9 +225,9 @@
     </div>
   </div>
 
-  <!-- LOGIC FIREBASE & DATABASE -->
+  <!-- SCRIPT LOGIC -->
   <script>
-    // 1. CẤU HÌNH THÔNG TIN DỰ ÁN FIREBASE CỦA BẠN TẠI ĐÂY:
+    // 1. CẤU HÌNH THÔNG TIN DỰ ÁN FIREBASE CỦA BẠN:
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -233,19 +237,52 @@
       appId: "YOUR_APP_ID"
     };
 
-    let db;
+    let db = null;
+    let isCloudReady = false;
+
+    // Khởi tạo Firebase SDK v8 (Cực kỳ an toàn, không báo lỗi ngầm)
     try {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.firestore();
+      if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        isCloudReady = true;
+      }
     } catch(err) {
-      console.warn("Chưa cấu hình Firebase hoặc lỗi khởi tạo.");
+      console.warn("Chưa cấu hình Firebase hoặc lỗi khởi tạo:", err);
     }
 
-    let transactions = [];
+    const STORAGE_KEY = 'HOI_THAO_VIMC_LOCAL';
+    let transactions = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
     let currentFilter = 'ALL';
     let currentFiles = [];
 
     const fmt = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+
+    function updateCloudBadge(status, text) {
+      const badgeMobile = document.getElementById('cloudBadge');
+      const badgeDesktop = document.getElementById('cloudBadgeDesktop');
+      
+      const colors = {
+        success: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
+        warning: 'bg-amber-500/20 text-amber-200 border-amber-400/30',
+        error: 'bg-rose-500/20 text-rose-200 border-rose-400/30'
+      };
+
+      const dotColors = {
+        success: 'bg-emerald-400',
+        warning: 'bg-amber-400',
+        error: 'bg-rose-400'
+      };
+
+      if (badgeMobile) {
+        badgeMobile.className = `text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 sm:hidden border ${colors[status]}`;
+        badgeMobile.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${dotColors[status]}"></span> ${text}`;
+      }
+      if (badgeDesktop) {
+        badgeDesktop.className = `hidden sm:flex text-xs px-2.5 py-1 rounded-full items-center gap-1.5 border ${colors[status]}`;
+        badgeDesktop.innerHTML = `<span class="w-2 h-2 rounded-full ${dotColors[status]}"></span> ${text}`;
+      }
+    }
 
     function toggleExpenseBreakdown() {
       const breakdown = document.getElementById('expenseBreakdown');
@@ -260,25 +297,11 @@
       }
     }
 
-    // Tự động lắng nghe cập nhật thời gian thực từ Cloud Firestore
-    function listenToDatabase() {
-      if (!db) return;
-      db.collection("expenses").onSnapshot((snapshot) => {
-        transactions = [];
-        snapshot.forEach((doc) => {
-          transactions.push({ id: doc.id, ...doc.data() });
-        });
-        render();
-      }, (error) => {
-        console.error("Lỗi Firestore:", error);
-      });
-    }
-
     function calculateSummary() {
       let totalAdvance = 0, totalExpense = 0, fbExpense = 0, pbExpense = 0, otherExpense = 0;
 
       transactions.forEach(t => {
-        const amt = Number(t.amount);
+        const amt = Number(t.amount) || 0;
         if (t.type === 'ADVANCE') {
           totalAdvance += amt;
         } else {
@@ -336,7 +359,7 @@
           ? `<div class="flex flex-wrap gap-1 max-w-[190px]">
               ${files.map((f, i) => `
                 <button onclick="previewFile('${item.id}', ${i})" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-100 hover:bg-blue-100 border border-slate-200 rounded text-[11px] text-slate-700 truncate max-w-[90px]" title="${f.name}">
-                  ${f.type.startsWith('image') ? '🖼️' : f.type.includes('pdf') ? '📄' : '📝'} <span class="truncate">${f.name}</span>
+                  ${f.type && f.type.startsWith('image') ? '🖼️' : (f.type && f.type.includes('pdf')) ? '📄' : '📝'} <span class="truncate">${f.name}</span>
                 </button>
               `).join('')}
             </div>`
@@ -385,7 +408,7 @@
             <div class="flex flex-wrap gap-1.5 pt-1">
               ${files.map((f, i) => `
                 <button onclick="previewFile('${item.id}', ${i})" class="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-700 max-w-[140px] truncate">
-                  ${f.type.startsWith('image') ? '🖼️' : f.type.includes('pdf') ? '📄' : '📝'} <span class="truncate">${f.name}</span>
+                  ${f.type && f.type.startsWith('image') ? '🖼️' : (f.type && f.type.includes('pdf')) ? '📄' : '📝'} <span class="truncate">${f.name}</span>
                 </button>
               `).join('')}
             </div>` : ''}
@@ -407,9 +430,13 @@
     }
 
     function openModal() {
-      document.getElementById('txForm').reset();
       document.getElementById('txId').value = '';
+      document.getElementById('txType').value = 'EXPENSE';
+      document.getElementById('txCategory').value = 'Bóng đá';
       document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('txPerson').value = '';
+      document.getElementById('txDescription').value = '';
+      document.getElementById('txAmount').value = '';
       document.getElementById('modalTitle').textContent = 'Thêm Khoản Giao Dịch';
       document.getElementById('submitBtn').textContent = 'Lưu Dữ Liệu';
       currentFiles = [];
@@ -444,10 +471,13 @@
       document.getElementById('modalForm').classList.add('flex');
     }
 
-    // Hàm nén ảnh tự động trước khi lưu trực tiếp vào Firestore
     function compressImage(file) {
       return new Promise((resolve) => {
         if (!file.type.startsWith('image/')) {
+          if (file.size > 800 * 1024) {
+            alert(`File "${file.name}" quá lớn (>800KB). Vui lòng chọn file nhẹ hơn!`);
+            return resolve(null);
+          }
           const reader = new FileReader();
           reader.onload = (e) => resolve({ dataUrl: e.target.result, name: file.name, type: file.type });
           reader.readAsDataURL(file);
@@ -459,7 +489,7 @@
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 1000;
+            const MAX_WIDTH = 700;
             let width = img.width;
             let height = img.height;
 
@@ -473,8 +503,7 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Nén ảnh chất lượng 0.7 (giảm dung lượng xuống còn ~100-200KB nhưng chữ hóa đơn vẫn rất rõ nét)
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
             resolve({ dataUrl: compressedDataUrl, name: file.name, type: 'image/jpeg' });
           };
           img.src = event.target.result;
@@ -495,11 +524,13 @@
       const filesToAdd = selectedFiles.slice(0, remainingSlots);
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Đang xử lý tệp...';
+      submitBtn.textContent = 'Đang đọc tệp...';
 
       for (let file of filesToAdd) {
         const processed = await compressImage(file);
-        currentFiles.push(processed);
+        if (processed) {
+          currentFiles.push(processed);
+        }
       }
 
       submitBtn.disabled = false;
@@ -524,7 +555,7 @@
         div.className = 'flex items-center justify-between bg-slate-100 px-3 py-1.5 rounded text-xs border border-slate-200';
         div.innerHTML = `
           <div class="flex items-center gap-2 truncate pr-2">
-            <span>${file.type.startsWith('image') ? '🖼️' : file.type.includes('pdf') ? '📄' : '📝'}</span>
+            <span>${file.type && file.type.startsWith('image') ? '🖼️' : (file.type && file.type.includes('pdf')) ? '📄' : '📝'}</span>
             <span class="truncate font-medium text-slate-700">${file.name}</span>
           </div>
           <button type="button" onclick="removePendingFile(${idx})" class="text-rose-500 hover:text-rose-700 font-bold px-1.5">&times;</button>
@@ -533,53 +564,96 @@
       });
     }
 
-    // Lưu thẳng vào Cloud Firestore (Không qua Storage)
-    async function handleFormSubmit(e) {
-      e.preventDefault();
-      const submitBtn = document.getElementById('submitBtn');
-      const originalText = submitBtn.textContent;
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Đang lưu lên đám mây...';
-
+    // ==========================================
+    // HÀM LƯU DỮ LIỆU ĐƯỢC GỌI TRỰC TIẾP TỪ NÚT BẤM (CHẮC CHẮN 100% PHẢN HỒI)
+    // ==========================================
+    async function saveDataNow() {
       const editId = document.getElementById('txId').value;
-      const payload = {
-        type: document.getElementById('txType').value,
-        category: document.getElementById('txCategory').value,
-        date: document.getElementById('txDate').value,
-        person: document.getElementById('txPerson').value.trim(),
-        description: document.getElementById('txDescription').value.trim(),
-        amount: Number(document.getElementById('txAmount').value),
-        files: currentFiles || [],
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      const date = document.getElementById('txDate').value;
+      const person = document.getElementById('txPerson').value.trim();
+      const description = document.getElementById('txDescription').value.trim();
+      const amount = Number(document.getElementById('txAmount').value);
+      const type = document.getElementById('txType').value;
+      const category = document.getElementById('txCategory').value;
+
+      // Kiểm tra nhập liệu rõ ràng
+      if (!date) {
+        alert("Vui lòng chọn ngày giao dịch!");
+        return;
+      }
+      if (!person) {
+        alert("Vui lòng điền người nhận / chi cho ai!");
+        return;
+      }
+      if (!description) {
+        alert("Vui lòng điền nội dung chi tiêu!");
+        return;
+      }
+      if (!amount || amount <= 0) {
+        alert("Vui lòng nhập số tiền hợp lệ (> 0 đ)!");
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang lưu...';
+
+      const txItem = {
+        id: editId || Date.now().toString(),
+        type,
+        category,
+        date,
+        person,
+        description,
+        amount,
+        files: currentFiles || []
       };
 
-      try {
-        if (!db) {
-          throw new Error("Chưa kết nối được Firebase! Vui lòng kiểm tra lại cấu hình firebaseConfig.");
-        }
+      // 1. Luôn lưu ngay vào LocalStorage để màn hình nhảy số tức thì
+      if (editId) {
+        const idx = transactions.findIndex(t => t.id === editId);
+        if (idx !== -1) transactions[idx] = txItem;
+      } else {
+        transactions.unshift(txItem);
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+      render();
+      closeModal();
+      submitBtn.disabled = false;
 
-        if (editId) {
-          await db.collection("expenses").doc(editId).update(payload);
-        } else {
-          await db.collection("expenses").add(payload);
+      // 2. Đồng bộ ngầm lên Cloud Firestore
+      if (isCloudReady && db) {
+        try {
+          if (editId) {
+            await db.collection("expenses").doc(editId).set(txItem, { merge: true });
+          } else {
+            await db.collection("expenses").doc(txItem.id).set(txItem);
+          }
+          updateCloudBadge('success', 'Đã đồng bộ');
+        } catch(err) {
+          console.error("Lỗi đồng bộ Cloud:", err);
+          updateCloudBadge('error', 'Chưa sync Cloud');
+          alert("Dữ liệu đã lưu trên máy, nhưng chưa thể đẩy lên Firebase do: " + (err.message || "Kiểm tra Rules"));
         }
-
-        closeModal();
-      } catch (error) {
-        console.error("Lỗi khi lưu:", error);
-        alert("Không thể lưu: " + (error.message || "Vui lòng kiểm tra lại Rules trong Firestore Database!"));
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
+      } else {
+        updateCloudBadge('warning', 'Chế độ Offline');
       }
     }
 
     async function deleteTx(id) {
       const item = transactions.find(t => t.id === id);
       const desc = item ? item.description : 'mục này';
-      if (confirm(`Bạn có chắc chắn muốn xoá khoản "${desc}"?`)) {
-        if (db) {
-          await db.collection("expenses").doc(id).delete();
+      if (confirm(`Bạn có chắc muốn xoá khoản "${desc}"?`)) {
+        transactions = transactions.filter(t => t.id !== id);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+        render();
+
+        if (isCloudReady && db) {
+          try {
+            await db.collection("expenses").doc(id).delete();
+          } catch(e) {
+            console.error("Lỗi xóa trên cloud:", e);
+          }
         }
       }
     }
@@ -597,14 +671,14 @@
       dlBtn.href = file.dataUrl;
       dlBtn.download = file.name;
 
-      if (file.type.startsWith('image/')) {
+      if (file.type && file.type.startsWith('image/')) {
         body.innerHTML = `<img src="${file.dataUrl}" class="max-h-[60vh] max-w-full rounded-lg object-contain shadow-sm">`;
       } else {
         body.innerHTML = `
           <div class="text-center p-4">
-            <p class="text-4xl mb-2">${file.type.includes('pdf') ? '📄' : '📝'}</p>
+            <p class="text-4xl mb-2">${file.type && file.type.includes('pdf') ? '📄' : '📝'}</p>
             <p class="font-medium text-xs text-slate-700 mb-2">${file.name}</p>
-            <p class="text-[11px] text-slate-400">Bấm nút bên dưới để tải tệp về xem trên máy.</p>
+            <p class="text-[11px] text-slate-400">Bấm nút bên dưới để tải tệp về xem.</p>
           </div>
         `;
       }
@@ -630,8 +704,7 @@
         'Chi Cho Ai': t.person,
         'Nội Dung': t.description,
         'Số Tiền (VNĐ)': t.amount,
-        'Số chứng từ': (t.files && t.files.length) ? t.files.length : 0,
-        'Tên file chứng từ': (t.files && t.files.length) ? t.files.map(f => f.name).join('; ') : 'Không có'
+        'Số lượng chứng từ': (t.files && t.files.length) ? t.files.length : 0
       }));
 
       const ws = XLSX.utils.json_to_sheet(rows);
@@ -640,7 +713,33 @@
       XLSX.writeFile(wb, `Bao_Cao_Chi_Phi_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
-    window.addEventListener('DOMContentLoaded', listenToDatabase);
+    // Kết nối Firebase Realtime Listener
+    function startApp() {
+      render();
+
+      if (isCloudReady && db) {
+        updateCloudBadge('warning', 'Đang kết nối Cloud...');
+        db.collection("expenses").onSnapshot((snapshot) => {
+          const cloudData = [];
+          snapshot.forEach((doc) => {
+            cloudData.push({ id: doc.id, ...doc.data() });
+          });
+          if (cloudData.length > 0) {
+            transactions = cloudData;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+            render();
+          }
+          updateCloudBadge('success', 'Đã đồng bộ');
+        }, (err) => {
+          console.warn("Lỗi listener Firestore:", err);
+          updateCloudBadge('error', 'Lỗi Cloud Rules');
+        });
+      } else {
+        updateCloudBadge('warning', 'Chế độ Local');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', startApp);
   </script>
 </body>
 </html>
