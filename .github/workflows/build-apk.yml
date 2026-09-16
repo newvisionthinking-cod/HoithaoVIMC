@@ -33,7 +33,11 @@ jobs:
           {
             "appId": "com.hoithao.vimc",
             "appName": "Hội Thao VIMC",
-            "webDir": "www"
+            "webDir": "www",
+            "server": {
+              "url": "https://newvisionthinking-cod.github.io/HoithaoVIMC/",
+              "cleartext": true
+            }
           }
           EOF
           npx cap add android
