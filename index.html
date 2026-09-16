@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quản Lý Chi Phí Hội Thao VIMC</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDK v9 compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <!-- SheetJS xuất Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .tab-active { border-b-2 border-blue-600 text-blue-600 font-semibold; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-20 select-none">
+
+  <!-- Header -->
+  <header class="bg-blue-800 text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-[10px] uppercase tracking-wider bg-blue-700 text-blue-100 px-2 py-0.5 rounded font-medium">Hội Thao VIMC</span>
+          <h1 class="text-base sm:text-xl font-bold mt-0.5">Sổ Quản Lý Chi Phí Thể Thao</h1>
+        </div>
+        <!-- Status Indicator -->
+        <span id="syncStatus" class="text-[11px] bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-2 py-0.5 rounded-full flex items-center gap-1 sm:hidden">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Đồng bộ
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="syncStatusDesktop" class="hidden sm:flex text-xs bg-blue-900/60 text-emerald-300 border border-emerald-500/40 px-2.5 py-1 rounded-full items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Đang kết nối máy chủ Cloud
+        </span>
+        <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow flex items-center gap-1">
+          📊 Excel
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6">
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng Tạm Ứng</span>
+          <p id="totalAdvance" class="text-xl sm:text-2xl font-bold text-blue-600 mt-1">0 đ</p>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-2">Nguồn kinh phí đã nhận từ cơ quan</p>
+      </div>
+
+      <!-- Thẻ Tổng Đã Chi (Click để xem phân rã) -->
+      <div class="bg-white rounded-xl shadow-sm border border-rose-200 overflow-hidden">
+        <button type="button" onclick="toggleExpenseBreakdown()" class="w-full p-4 text-left flex items-start justify-between bg-rose-50/40 hover:bg-rose-50/80 transition">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-rose-700 uppercase tracking-wider">Tổng Đã Chi</span>
+              <span class="text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-medium">Bấm xem chi tiết</span>
+            </div>
+            <p id="totalExpense" class="text-xl sm:text-2xl font-bold text-rose-600 mt-1">0 đ</p>
+          </div>
+          <div id="expenseChevron" class="text-rose-500 font-bold text-sm transition-transform duration-200">
+            ▼
+          </div>
+        </button>
+
+        <div id="expenseBreakdown" class="hidden border-t border-rose-100 bg-white px-4 py-3 space-y-2 text-xs divide-y divide-slate-100">
+          <div class="flex justify-between items-center pt-1.5 first:pt-0">
+            <span class="text-slate-600 flex items-center gap-1.5"><span>⚽</span> Chi Bóng Đá:</span>
+            <span id="footballExpense" class="font-bold text-slate-800 text-sm">0 đ</span>
+          </div>
+          <div class="flex justify-between items-center pt-1.5">
+            <span class="text-slate-600 flex items-center gap-1.5"><span>🏓</span> Chi Pickleball:</span>
+            <span id="pickleballExpense" class="font-bold text-slate-800 text-sm">0 đ</span>
+          </div>
+          <div class="flex justify-between items-center pt-1.5">
+            <span class="text-slate-600 flex items-center gap-1.5"><span>📋</span> Chi Khác:</span>
+            <span id="otherExpense" class="font-bold text-slate-800 text-sm">0 đ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Số Dư Banner -->
+    <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 sm:p-5 rounded-2xl shadow-md mb-5 flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase font-medium text-blue-200 tracking-wider">Số Tiền Còn Lại</p>
+        <p id="remainingFund" class="text-2xl sm:text-3xl font-extrabold mt-0.5">0 đ</p>
+      </div>
+      <button onclick="openModal()" class="bg-white text-blue-800 hover:bg-blue-50 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1">
+        <span>+</span> Thêm Khoản Mới
+      </button>
+    </div>
+
+    <!-- Danh Sách & Bộ Lọc -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="flex border-b border-slate-200 text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2 overflow-x-auto">
+        <button onclick="filterCategory('ALL')" id="tab-ALL" class="tab-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap">Tất Cả</button>
+        <button onclick="filterCategory('Bóng đá')" id="tab-Bóng đá" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">⚽ Bóng Đá</button>
+        <button onclick="filterCategory('Pickleball')" id="tab-Pickleball" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">🏓 Pickleball</button>
+        <button onclick="filterCategory('Khác')" id="tab-Khác" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">📋 Khác</button>
+      </div>
+
+      <!-- Bảng Máy Tính -->
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+            <tr>
+              <th class="py-3 px-4 font-semibold">Ngày</th>
+              <th class="py-3 px-4 font-semibold">Loại</th>
+              <th class="py-3 px-4 font-semibold">Bộ Môn</th>
+              <th class="py-3 px-4 font-semibold">Nội Dung</th>
+              <th class="py-3 px-4 font-semibold">Chi Cho Ai</th>
+              <th class="py-3 px-4 font-semibold">Chứng Từ</th>
+              <th class="py-3 px-4 font-semibold text-right">Số Tiền</th>
+              <th class="py-3 px-4 font-semibold text-center">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="txTableDesktop" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+
+      <!-- Danh Sách Điện Thoại -->
+      <div id="txListMobile" class="md:hidden divide-y divide-slate-100"></div>
+
+      <div id="emptyState" class="hidden text-center py-12 text-slate-400">
+        <p class="text-sm">Chưa có giao dịch nào được lưu.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Nhập / Sửa -->
+  <div id="modalForm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col">
+      <div class="px-5 py-3.5 bg-slate-100 border-b border-slate-200 flex justify-between items-center shrink-0">
+        <h3 class="font-bold text-slate-800 text-sm sm:text-base" id="modalTitle">Thêm Giao Dịch</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      </div>
+
+      <form id="txForm" onsubmit="handleFormSubmit(event)" class="p-4 sm:p-5 space-y-3 text-sm overflow-y-auto">
+        <input type="hidden" id="txId">
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1 text-xs">Loại Giao Dịch</label>
+            <select id="txType" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-xs sm:text-sm font-medium">
+              <option value="EXPENSE">Khoản Chi</option>
+              <option value="ADVANCE">Tạm Ứng</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1 text-xs">Bộ Môn</label>
+            <select id="txCategory" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-xs sm:text-sm">
+              <option value="Bóng đá">⚽ Bóng đá</option>
+              <option value="Pickleball">🏓 Pickleball</option>
+              <option value="Khác">📋 Khác</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Ngày Giao Dịch</label>
+          <input type="date" id="txDate" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Chi Cho Ai / Người Nhận</label>
+          <input type="text" id="txPerson" placeholder="VD: Sân bóng, Shop Joola, Nguyễn Văn A..." required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Nội Dung Chi</label>
+          <input type="text" id="txDescription" placeholder="VD: Tiền sân, Mua bóng thi đấu..." required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Số Tiền (VNĐ)</label>
+          <input type="number" id="txAmount" placeholder="0" min="1000" step="1000" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold">
+        </div>
+
+        <!-- Đính Kèm File Lên Firebase Storage -->
+        <div class="border-t border-slate-200 pt-2.5">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block font-semibold text-slate-700 text-xs">Tệp Đính Kèm (Tối đa 10 tệp)</label>
+            <span id="fileCountBadge" class="text-[11px] text-slate-500">0/10 tệp</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mb-2">Ảnh chụp (.jpg, .png), PDF, Word (.doc, .docx)</p>
+
+          <label class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 p-3 rounded-xl cursor-pointer">
+            <span class="text-xl">📷 / 📎</span>
+            <span class="text-[11px] font-semibold text-blue-600 mt-0.5">Bấm để chụp ảnh hoặc chọn tệp</span>
+            <input type="file" id="txFileInput" multiple accept="image/*,.pdf,.doc,.docx" class="hidden" onchange="handleFileSelection(event)">
+          </label>
+
+          <div id="pendingFileList" class="mt-2 space-y-1 max-h-32 overflow-y-auto"></div>
+        </div>
+
+        <div class="pt-2 flex gap-2 border-t border-slate-200 shrink-0">
+          <button type="button" onclick="closeModal()" class="w-1/2 py-2 rounded-lg border border-slate-300 text-slate-600 font-medium">Hủy</button>
+          <button type="submit" id="submitBtn" class="w-1/2 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm">Lưu Dữ Liệu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Xem Chi Tiết File -->
+  <div id="viewModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-4 flex flex-col max-h-[90vh]">
+      <div class="flex justify-between items-center pb-2 border-b border-slate-200">
+        <h4 id="viewModalTitle" class="text-xs sm:text-sm font-semibold truncate text-slate-800 pr-2">Chứng từ</h4>
+        <button onclick="closeViewModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div id="viewModalBody" class="flex-1 overflow-auto flex items-center justify-center p-2 min-h-[200px]"></div>
+      <div class="pt-2.5 flex justify-end gap-2 border-t border-slate-200">
+        <a id="downloadBtn" target="_blank" download="" href="#" class="px-3.5 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg">
+          ⬇️ Mở / Tải Về
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FIREBASE VÀ LOGIC SỰ KIỆN ================= -->
+  <script>
+    // 1. CẤU HÌNH FIREBASE CỦA BẠN (Thay bằng thông số trong Console Firebase của bạn)
+    const firebaseConfig = {
+  apiKey: "AIzaSyApjuT6bCk-3B6TbwyB0JsEqdY2Bze-8Bg",
+  authDomain: "hoithaovimc.firebaseapp.com",
+  projectId: "hoithaovimc",
+  storageBucket: "hoithaovimc.firebasestorage.app",
+  messagingSenderId: "351510274467",
+  appId: "1:351510274467:web:e675ed2b843a0176133a16"
+};
+
+    // Khởi tạo Firebase
+    let db, storage;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      storage = firebase.storage();
+    } catch(err) {
+      console.warn("Chưa cấu hình Firebase hợp lệ, đang chạy chế độ offline tạm thời.");
+    }
+
+    let transactions = [];
+    let currentFilter = 'ALL';
+    let currentFiles = []; // Mảng chứa { name, url, type, path }
+
+    const fmt = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+
+    function toggleExpenseBreakdown() {
+      const breakdown = document.getElementById('expenseBreakdown');
+      const chevron = document.getElementById('expenseChevron');
+      const isHidden = breakdown.classList.contains('hidden');
+      if (isHidden) {
+        breakdown.classList.remove('hidden');
+        chevron.style.transform = 'rotate(180deg)';
+      } else {
+        breakdown.classList.add('hidden');
+        chevron.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    // Lắng nghe dữ liệu thời gian thực (Real-time synchronization)
+    function listenToDatabase() {
+      if (!db) return;
+      db.collection("expenses").onSnapshot((snapshot) => {
+        transactions = [];
+        snapshot.forEach((doc) => {
+          transactions.push({ id: doc.id, ...doc.data() });
+        });
+        render();
+      }, (error) => {
+        console.error("Lỗi đồng bộ:", error);
+      });
+    }
+
+    function calculateSummary() {
+      let totalAdvance = 0, totalExpense = 0, fbExpense = 0, pbExpense = 0, otherExpense = 0;
+
+      transactions.forEach(t => {
+        const amt = Number(t.amount);
+        if (t.type === 'ADVANCE') {
+          totalAdvance += amt;
+        } else {
+          totalExpense += amt;
+          if (t.category === 'Bóng đá') fbExpense += amt;
+          else if (t.category === 'Pickleball') pbExpense += amt;
+          else otherExpense += amt;
+        }
+      });
+
+      document.getElementById('totalAdvance').textContent = fmt(totalAdvance);
+      document.getElementById('totalExpense').textContent = fmt(totalExpense);
+      document.getElementById('footballExpense').textContent = fmt(fbExpense);
+      document.getElementById('pickleballExpense').textContent = fmt(pbExpense);
+      document.getElementById('otherExpense').textContent = fmt(otherExpense);
+      
+      const remaining = totalAdvance - totalExpense;
+      const remEl = document.getElementById('remainingFund');
+      remEl.textContent = fmt(remaining);
+      remEl.className = remaining < 0 ? 'text-2xl sm:text-3xl font-extrabold mt-0.5 text-rose-300' : 'text-2xl sm:text-3xl font-extrabold mt-0.5 text-white';
+    }
+
+    function render() {
+      calculateSummary();
+      const tbodyDesktop = document.getElementById('txTableDesktop');
+      const listMobile = document.getElementById('txListMobile');
+      const emptyState = document.getElementById('emptyState');
+
+      const filtered = transactions.filter(t => currentFilter === 'ALL' || t.category === currentFilter);
+      tbodyDesktop.innerHTML = '';
+      listMobile.innerHTML = '';
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      filtered.forEach(item => {
+        const isExp = item.type === 'EXPENSE';
+        const typeBadge = isExp 
+          ? '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-100">Chi</span>'
+          : '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">Tạm ứng</span>';
+
+        const catIcon = item.category === 'Bóng đá' ? '⚽ Bóng đá' : item.category === 'Pickleball' ? '🏓 Pickleball' : '📋 Khác';
+        const catBadge = `<span class="text-xs px-2 py-0.5 rounded-full font-medium ${
+          item.category === 'Bóng đá' ? 'bg-amber-100 text-amber-800' : 
+          item.category === 'Pickleball' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-700'
+        }">${catIcon}</span>`;
+
+        const files = item.files || [];
+        const fileBadgesHtml = files.length > 0 
+          ? `<div class="flex flex-wrap gap-1 max-w-[190px]">
+              ${files.map((f, i) => `
+                <button onclick="previewFile('${item.id}', ${i})" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-100 hover:bg-blue-100 border border-slate-200 rounded text-[11px] text-slate-700 truncate max-w-[90px]" title="${f.name}">
+                  ${f.type.startsWith('image') ? '🖼️' : f.type.includes('pdf') ? '📄' : '📝'} <span class="truncate">${f.name}</span>
+                </button>
+              `).join('')}
+            </div>`
+          : `<span class="text-slate-300 text-xs italic">Không có</span>`;
+
+        // Desktop
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/70 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 text-slate-500 font-mono text-xs">${item.date}</td>
+          <td class="py-3 px-4">${typeBadge}</td>
+          <td class="py-3 px-4">${catBadge}</td>
+          <td class="py-3 px-4 font-medium text-slate-800">${item.description}</td>
+          <td class="py-3 px-4 text-slate-600">${item.person}</td>
+          <td class="py-3 px-4">${fileBadgesHtml}</td>
+          <td class="py-3 px-4 text-right font-semibold ${isExp ? 'text-rose-600' : 'text-emerald-600'}">
+            ${isExp ? '-' : '+'}${fmt(item.amount)}
+          </td>
+          <td class="py-3 px-4 text-center">
+            <div class="flex items-center justify-center gap-1.5">
+              <button onclick="editTx('${item.id}')" class="text-blue-600 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50">✏️ Sửa</button>
+              <button onclick="deleteTx('${item.id}')" class="text-rose-600 font-medium text-xs px-2 py-1 rounded hover:bg-rose-50">🗑️ Xoá</button>
+            </div>
+          </td>
+        `;
+        tbodyDesktop.appendChild(tr);
+
+        // Mobile
+        const card = document.createElement('div');
+        card.className = 'p-3.5 flex flex-col gap-2 hover:bg-slate-50';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">${typeBadge} ${catBadge}</div>
+            <span class="text-xs font-mono text-slate-400">${item.date}</span>
+          </div>
+          <div class="flex justify-between items-start mt-0.5">
+            <div class="pr-2">
+              <p class="font-medium text-slate-800 text-sm leading-tight">${item.description}</p>
+              <p class="text-xs text-slate-500 mt-1">Chi cho: <span class="text-slate-700 font-medium">${item.person}</span></p>
+            </div>
+            <span class="font-bold text-sm whitespace-nowrap text-right ${isExp ? 'text-rose-600' : 'text-emerald-600'}">
+              ${isExp ? '-' : '+'}${fmt(item.amount)}
+            </span>
+          </div>
+          ${files.length > 0 ? `
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              ${files.map((f, i) => `
+                <button onclick="previewFile('${item.id}', ${i})" class="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-700 max-w-[140px] truncate">
+                  ${f.type.startsWith('image') ? '🖼️' : f.type.includes('pdf') ? '📄' : '📝'} <span class="truncate">${f.name}</span>
+                </button>
+              `).join('')}
+            </div>` : ''}
+          <div class="flex justify-end gap-3 pt-2 border-t border-slate-100 mt-1">
+            <button onclick="editTx('${item.id}')" class="text-xs text-blue-600 font-medium">✏️ Sửa</button>
+            <span class="text-slate-300">|</span>
+            <button onclick="deleteTx('${item.id}')" class="text-xs text-rose-600 font-medium">🗑️ Xoá</button>
+          </div>
+        `;
+        listMobile.appendChild(card);
+      });
+    }
+
+    function filterCategory(cat) {
+      currentFilter = cat;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+      document.getElementById(`tab-${cat}`).classList.add('tab-active');
+      render();
+    }
+
+    function openModal() {
+      document.getElementById('txForm').reset();
+      document.getElementById('txId').value = '';
+      document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('modalTitle').textContent = 'Thêm Khoản Giao Dịch';
+      document.getElementById('submitBtn').textContent = 'Lưu Lên Máy Chủ';
+      currentFiles = [];
+      renderPendingFiles();
+      document.getElementById('modalForm').classList.remove('hidden');
+      document.getElementById('modalForm').classList.add('flex');
+    }
+
+    function closeModal() {
+      document.getElementById('modalForm').classList.add('hidden');
+      document.getElementById('modalForm').classList.remove('flex');
+    }
+
+    function editTx(id) {
+      const item = transactions.find(t => t.id === id);
+      if (!item) return;
+
+      document.getElementById('txId').value = item.id;
+      document.getElementById('txType').value = item.type;
+      document.getElementById('txCategory').value = item.category;
+      document.getElementById('txDate').value = item.date;
+      document.getElementById('txPerson').value = item.person;
+      document.getElementById('txDescription').value = item.description;
+      document.getElementById('txAmount').value = item.amount;
+
+      currentFiles = item.files ? [...item.files] : [];
+      renderPendingFiles();
+
+      document.getElementById('modalTitle').textContent = 'Chỉnh Sửa Giao Dịch';
+      document.getElementById('submitBtn').textContent = 'Cập Nhật';
+      document.getElementById('modalForm').classList.remove('hidden');
+      document.getElementById('modalForm').classList.add('flex');
+    }
+
+    // Tải file lên Firebase Storage
+    async function handleFileSelection(event) {
+      const selectedFiles = Array.from(event.target.files);
+      const remainingSlots = 10 - currentFiles.length;
+
+      if (remainingSlots <= 0) {
+        alert('Tối đa 10 tệp đính kèm cho mỗi mục!');
+        return;
+      }
+
+      const filesToAdd = selectedFiles.slice(0, remainingSlots);
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang tải tệp lên...';
+
+      for (let file of filesToAdd) {
+        if (storage) {
+          const fileRef = storage.ref().child(`receipts/${Date.now()}_${file.name}`);
+          await fileRef.put(file);
+          const downloadUrl = await fileRef.getDownloadURL();
+          currentFiles.push({
+            name: file.name,
+            url: downloadUrl,
+            type: file.type,
+            path: fileRef.fullPath
+          });
+        }
+      }
+      submitBtn.disabled = false;
+      submitBtn.textContent = document.getElementById('txId').value ? 'Cập Nhật' : 'Lưu Lên Máy Chủ';
+      renderPendingFiles();
+      event.target.value = '';
+    }
+
+    function removePendingFile(idx) {
+      currentFiles.splice(idx, 1);
+      renderPendingFiles();
+    }
+
+    function renderPendingFiles() {
+      const listEl = document.getElementById('pendingFileList');
+      const countEl = document.getElementById('fileCountBadge');
+      listEl.innerHTML = '';
+      countEl.textContent = `${currentFiles.length}/10 tệp`;
+
+      currentFiles.forEach((file, idx) => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between bg-slate-100 px-3 py-1.5 rounded text-xs border border-slate-200';
+        div.innerHTML = `
+          <div class="flex items-center gap-2 truncate pr-2">
+            <span>${file.type.startsWith('image') ? '🖼️' : file.type.includes('pdf') ? '📄' : '📝'}</span>
+            <span class="truncate font-medium text-slate-700">${file.name}</span>
+          </div>
+          <button type="button" onclick="removePendingFile(${idx})" class="text-rose-500 hover:text-rose-700 font-bold px-1.5">&times;</button>
+        `;
+        listEl.appendChild(div);
+      });
+    }
+
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const editId = document.getElementById('txId').value;
+      const payload = {
+        type: document.getElementById('txType').value,
+        category: document.getElementById('txCategory').value,
+        date: document.getElementById('txDate').value,
+        person: document.getElementById('txPerson').value.trim(),
+        description: document.getElementById('txDescription').value.trim(),
+        amount: Number(document.getElementById('txAmount').value),
+        files: currentFiles,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      if (db) {
+        if (editId) {
+          await db.collection("expenses").doc(editId).update(payload);
+        } else {
+          await db.collection("expenses").add(payload);
+        }
+      }
+      closeModal();
+    }
+
+    async function deleteTx(id) {
+      const item = transactions.find(t => t.id === id);
+      const desc = item ? item.description : 'mục này';
+      if (confirm(`Bạn có chắc chắn muốn xoá khoản "${desc}"?`)) {
+        if (db) {
+          await db.collection("expenses").doc(id).delete();
+        }
+      }
+    }
+
+    function previewFile(txId, idx) {
+      const tx = transactions.find(t => t.id === txId);
+      if (!tx || !tx.files || !tx.files[idx]) return;
+      const file = tx.files[idx];
+      const viewModal = document.getElementById('viewModal');
+      const body = document.getElementById('viewModalBody');
+      const title = document.getElementById('viewModalTitle');
+      const dlBtn = document.getElementById('downloadBtn');
+
+      title.textContent = file.name;
+      dlBtn.href = file.url;
+
+      if (file.type.startsWith('image/')) {
+        body.innerHTML = `<img src="${file.url}" class="max-h-[60vh] max-w-full rounded-lg object-contain shadow-sm">`;
+      } else {
+        body.innerHTML = `
+          <div class="text-center p-4">
+            <p class="text-4xl mb-2">${file.type.includes('pdf') ? '📄' : '📝'}</p>
+            <p class="font-medium text-xs text-slate-700">${file.name}</p>
+          </div>
+        `;
+      }
+      viewModal.classList.remove('hidden');
+      viewModal.classList.add('flex');
+    }
+
+    function closeViewModal() {
+      document.getElementById('viewModal').classList.add('hidden');
+      document.getElementById('viewModal').classList.remove('flex');
+    }
+
+    function exportToExcel() {
+      if (transactions.length === 0) {
+        alert('Chưa có dữ liệu để xuất file!');
+        return;
+      }
+      const rows = transactions.map((t, idx) => ({
+        'STT': idx + 1,
+        'Ngày': t.date,
+        'Nghiệp Vụ': t.type === 'ADVANCE' ? 'Tạm ứng' : 'Khoản chi',
+        'Bộ Môn': t.category,
+        'Chi Cho Ai': t.person,
+        'Nội Dung': t.description,
+        'Số Tiền (VNĐ)': t.amount,
+        'Số chứng từ': (t.files && t.files.length) ? t.files.length : 0,
+        'Link chứng từ': (t.files && t.files.length) ? t.files.map(f => f.url).join('\n') : ''
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Chi_Phi_Hoi_Thao");
+      XLSX.writeFile(wb, `Bao_Cao_Chi_Phi_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    window.addEventListener('DOMContentLoaded', listenToDatabase);
+  </script>
+</body>
+</html>
