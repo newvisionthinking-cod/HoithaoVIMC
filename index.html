@@ -173,7 +173,7 @@
       </button>
     </div>
 
-    <!-- Bộ Lọc VĐV Rõ Ràng Từng Mục -->
+    <!-- Bộ Lọc VĐV -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible">
       <div class="flex items-center border-b border-slate-200 text-xs sm:text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2 overflow-x-auto">
         <button onclick="selectAthleteFilter('ALL', 'Tất Cả')" id="tabAth-ALL" class="tabAth-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap transition">
@@ -211,19 +211,19 @@
         </div>
       </div>
 
-      <!-- Bảng Desktop VĐV (Đã tăng độ rộng cột nội dung min-w-[240px]) -->
+      <!-- Bảng Desktop VĐV (Xuống dòng tự nhiên, độ rộng vừa vặn) -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-left text-sm">
           <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
             <tr>
-              <th class="py-3 px-4 font-semibold text-center w-12">STT</th>
-              <th class="py-3 px-4 font-semibold whitespace-nowrap">Họ Và Tên</th>
-              <th class="py-3 px-4 font-semibold whitespace-nowrap">Môn Thi Đấu</th>
-              <th class="py-3 px-4 font-semibold min-w-[240px] whitespace-nowrap">Nội Dung Tham Gia</th>
-              <th class="py-3 px-4 font-semibold whitespace-nowrap">Năm Sinh (Tuổi)</th>
-              <th class="py-3 px-4 font-semibold whitespace-nowrap">Mã Số BHXH</th>
-              <th class="py-3 px-4 font-semibold">Ghi Chú / Bạn Đôi</th>
-              <th class="py-3 px-4 font-semibold text-center whitespace-nowrap">Thao Tác</th>
+              <th class="py-3 px-3 font-semibold text-center w-12">STT</th>
+              <th class="py-3 px-3 font-semibold">Họ Và Tên</th>
+              <th class="py-3 px-3 font-semibold">Môn Thi Đấu</th>
+              <th class="py-3 px-3 font-semibold">Nội Dung Tham Gia</th>
+              <th class="py-3 px-3 font-semibold">Năm Sinh (Tuổi)</th>
+              <th class="py-3 px-3 font-semibold">Mã Số BHXH</th>
+              <th class="py-3 px-3 font-semibold">Ghi Chú / Bạn Đôi</th>
+              <th class="py-3 px-3 font-semibold text-center w-24">Thao Tác</th>
             </tr>
           </thead>
           <tbody id="athleteTableDesktop" class="divide-y divide-slate-100"></tbody>
@@ -338,7 +338,6 @@
           </select>
         </div>
 
-        <!-- Khung Checkbox chuẩn hóa ID -->
         <div id="pickleballEventsBox" class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2">
           <label class="block font-semibold text-indigo-900 text-xs">Nội dung Pickleball (Tích chọn nhiều nội dung):</label>
           <div class="grid grid-cols-2 gap-2 text-xs">
@@ -566,7 +565,7 @@
 
         const files = item.files || [];
         const fileBadgesHtml = files.length > 0 
-          ? `<div class="flex flex-wrap gap-1 max-w-[190px]">
+          ? `<div class="flex flex-wrap gap-1">
               ${files.map((f, i) => `
                 <button onclick="previewFile('${item.id}', ${i})" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-100 hover:bg-blue-100 border border-slate-200 rounded text-[11px] text-slate-700 truncate max-w-[90px]" title="${f.name}">
                   ${f.type && f.type.startsWith('image') ? '🖼️' : (f.type && f.type.includes('pdf')) ? '📄' : '📝'} <span class="truncate">${f.name}</span>
@@ -832,8 +831,7 @@
       }
     }
 
-    // ==================== PHẦN VẬN ĐỘNG VIÊN CHUẨN HÓA MÃ NỘI DUNG ====================
-    // Bảng quy đổi nội dung chuẩn xác
+    // ==================== PHẦN VẬN ĐỘNG VIÊN ====================
     const EVENT_KEYS = {
       doi_nam: '🎾 Đôi Nam',
       doi_nu: '👭 Đôi Nữ',
@@ -842,7 +840,6 @@
       don_nu: 'Đơn Nữ'
     };
 
-    // Hàm chuyển đổi mọi kiểu dữ liệu cũ/mới thành danh sách mã chuẩn: ['doi_nam', 'doi_nam_nu', ...]
     function normalizeEvents(ath) {
       if (!ath) return [];
       let rawList = [];
@@ -860,7 +857,6 @@
         const s = String(item).trim().toLowerCase();
         if (!s) return;
 
-        // Bắt chính xác Đôi nam nữ trước để không bị nhầm vào Đôi nam
         if (s === 'doi_nam_nu' || s.includes('nam nữ') || s.includes('nam nu')) {
           keys.add('doi_nam_nu');
         } else if (s === 'doi_nu' || (s.includes('đôi nữ') || s.includes('doi nu'))) {
@@ -954,7 +950,6 @@
 
       if (!tbody || !mobileList) return;
 
-      // 1. Thống kê quân số duy nhất dựa theo mã BHXH
       const allUniqueInsurances = new Set();
       const footballInsurances = new Set();
       const pickleballInsurances = new Set();
@@ -979,7 +974,7 @@
       if (document.getElementById('statPickleballAthletes')) document.getElementById('statPickleballAthletes').textContent = pickleballInsurances.size;
       if (document.getElementById('athleteCountHeader')) document.getElementById('athleteCountHeader').textContent = allUniqueInsurances.size;
 
-      // 2. Lọc danh sách: Bắt chuẩn xác mã nội dung
+      // Lọc danh sách chuẩn xác
       const filtered = athletes.filter(a => {
         if (!a) return false;
         if (currentAthleteFilter === 'ALL') return true;
@@ -992,7 +987,6 @@
           return sport === 'Pickleball' || sport === 'Cả 2 môn';
         }
 
-        // Lọc nội dung đôi chi tiết (doi_nam, doi_nu, doi_nam_nu):
         const normKeys = normalizeEvents(a);
         return normKeys.includes(currentAthleteFilter);
       });
@@ -1008,7 +1002,7 @@
 
       const currentYear = new Date().getFullYear();
 
-      // 3. Render danh sách ra màn hình
+      // Render danh sách (cho phép xuống dòng tự nhiên)
       filtered.forEach((ath, idx) => {
         const athId = String(ath.id || idx);
         const athName = ath.name || 'Chưa đặt tên';
@@ -1020,39 +1014,39 @@
         const normKeys = normalizeEvents(ath);
 
         const catBadge = sport === 'Bóng đá' 
-          ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 whitespace-nowrap">⚽ Bóng Đá</span>'
+          ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">⚽ Bóng Đá</span>'
           : sport === 'Pickleball'
-          ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 whitespace-nowrap">🏓 Pickleball</span>'
-          : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 whitespace-nowrap">⚽ 🏓 Cả 2 môn</span>';
+          ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">🏓 Pickleball</span>'
+          : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">⚽ 🏓 Cả 2 môn</span>';
 
         let eventsBadgesHtml = '';
         if (sport === 'Bóng đá') {
-          eventsBadgesHtml = '<span class="inline-block px-2.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 whitespace-nowrap">⚽ Cầu thủ bóng đá</span>';
+          eventsBadgesHtml = '<span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">⚽ Cầu thủ bóng đá</span>';
         } else if (normKeys.length > 0) {
           eventsBadgesHtml = `<div class="flex flex-wrap gap-1">` + normKeys.map(k => {
-            if (k === 'doi_nam') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200 whitespace-nowrap">🎾 Đôi Nam</span>';
-            if (k === 'doi_nu') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200 whitespace-nowrap">👭 Đôi Nữ</span>';
-            if (k === 'doi_nam_nu') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200 whitespace-nowrap">👫 Đôi Nam Nữ</span>';
-            if (k === 'don_nam') return '<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 whitespace-nowrap">Đơn Nam</span>';
-            if (k === 'don_nu') return '<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 whitespace-nowrap">Đơn Nữ</span>';
-            return `<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 whitespace-nowrap">${k}</span>`;
+            if (k === 'doi_nam') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">🎾 Đôi Nam</span>';
+            if (k === 'doi_nu') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">👭 Đôi Nữ</span>';
+            if (k === 'doi_nam_nu') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">👫 Đôi Nam Nữ</span>';
+            if (k === 'don_nam') return '<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">Đơn Nam</span>';
+            if (k === 'don_nu') return '<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">Đơn Nữ</span>';
+            return `<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">${k}</span>`;
           }).join('') + `</div>`;
         } else {
-          eventsBadgesHtml = '<span class="text-xs text-slate-400 italic whitespace-nowrap">Chưa xếp nội dung</span>';
+          eventsBadgesHtml = '<span class="text-xs text-slate-400 italic">Chưa xếp nội dung</span>';
         }
 
-        // Bảng Desktop: Cột nội dung rộng rãi, không bị rớt dòng
+        // Bảng Desktop (Co giãn tự nhiên)
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition';
         tr.innerHTML = `
-          <td class="py-3 px-4 text-center font-mono text-xs text-slate-400 whitespace-nowrap">${idx + 1}</td>
-          <td class="py-3 px-4 font-bold text-slate-800 whitespace-nowrap">${athName}</td>
-          <td class="py-3 px-4 whitespace-nowrap">${catBadge}</td>
-          <td class="py-3 px-4 min-w-[240px] whitespace-nowrap">${eventsBadgesHtml}</td>
-          <td class="py-3 px-4 text-slate-700 font-medium whitespace-nowrap">${athYear || '-'} <span class="text-xs text-slate-400">(${age} tuổi)</span></td>
-          <td class="py-3 px-4 font-mono font-semibold text-blue-700 whitespace-nowrap">${athIns}</td>
-          <td class="py-3 px-4 text-slate-600 text-xs">${athNotes}</td>
-          <td class="py-3 px-4 text-center whitespace-nowrap">
+          <td class="py-3 px-3 text-center font-mono text-xs text-slate-400">${idx + 1}</td>
+          <td class="py-3 px-3 font-bold text-slate-800">${athName}</td>
+          <td class="py-3 px-3">${catBadge}</td>
+          <td class="py-3 px-3">${eventsBadgesHtml}</td>
+          <td class="py-3 px-3 text-slate-700 font-medium">${athYear || '-'} <span class="text-xs text-slate-400">(${age} tuổi)</span></td>
+          <td class="py-3 px-3 font-mono font-semibold text-blue-700">${athIns}</td>
+          <td class="py-3 px-3 text-slate-600 text-xs">${athNotes}</td>
+          <td class="py-3 px-3 text-center">
             <div class="flex items-center justify-center gap-1.5">
               <button onclick="editAthlete('${athId}')" class="text-blue-600 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50">✏️ Sửa</button>
               <button onclick="deleteAthlete('${athId}')" class="text-rose-600 font-medium text-xs px-2 py-1 rounded hover:bg-rose-50">🗑️ Xoá</button>
@@ -1127,7 +1121,6 @@
       document.getElementById('athCategory').value = a.category || 'Pickleball';
       handleSportChange();
 
-      // Bắt chuẩn xác các checkbox khi mở form sửa
       const normKeys = normalizeEvents(a);
       document.querySelectorAll('input[name="pbEvent"]').forEach(cb => {
         cb.checked = normKeys.includes(cb.value);
@@ -1182,7 +1175,7 @@
         id: editId || Date.now().toString(),
         name,
         category,
-        events: selectedKeys, // Lưu mảng mã chuẩn: ['doi_nam', 'doi_nam_nu']
+        events: selectedKeys,
         birthYear,
         insurance,
         notes
