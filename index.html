@@ -889,99 +889,148 @@
       return [];
     }
 
-    function renderAthletes() {
+function renderAthletes() {
       const tbody = document.getElementById('athleteTableDesktop');
       const mobileList = document.getElementById('athleteListMobile');
       const emptyState = document.getElementById('athleteEmptyState');
 
+      if (!tbody || !mobileList) return;
+
+      // 1. Thống kê quân số duy nhất theo mã BHXH
       const allUniqueInsurances = new Set();
       const footballInsurances = new Set();
       const pickleballInsurances = new Set();
 
       athletes.forEach((a, idx) => {
-        const uid = (a.insurance && a.insurance.trim()) ? a.insurance.trim().toLowerCase() : `ath_no_bhxh_${a.id || idx}`;
+        const uid = (a.insurance && String(a.insurance).trim()) 
+          ? String(a.insurance).trim().toLowerCase() 
+          : `ath_no_bhxh_${a.id || idx}`;
         allUniqueInsurances.add(uid);
 
         if (a.category === 'Bóng đá' || a.category === 'Cả 2 môn') {
           footballInsurances.add(uid);
         }
-        if (a.category === 'Pickleball' || a.category === 'Cả 2 môn') {
+        if (a.category === 'Pickleball' || a.category === 'Cả 2 môn' || !a.category) {
           pickleballInsurances.add(uid);
         }
       });
 
-      document.getElementById('statTotalAthletes').textContent = allUniqueInsurances.size;
-      document.getElementById('statFootballAthletes').textContent = footballInsurances.size;
-      document.getElementById('statPickleballAthletes').textContent = pickleballInsurances.size;
-      document.getElementById('athleteCountHeader').textContent = allUniqueInsurances.size;
+      if (document.getElementById('statTotalAthletes')) {
+        document.getElementById('statTotalAthletes').textContent = allUniqueInsurances.size;
+      }
+      if (document.getElementById('statFootballAthletes')) {
+        document.getElementById('statFootballAthletes').textContent = footballInsurances.size;
+      }
+      if (document.getElementById('statPickleballAthletes')) {
+        document.getElementById('statPickleballAthletes').textContent = pickleballInsurances.size;
+      }
+      if (document.getElementById('athleteCountHeader')) {
+        document.getElementById('athleteCountHeader').textContent = allUniqueInsurances.size;
+      }
 
+      // 2. Lọc danh sách an toàn tuyệt đối (không bao giờ bị crash)
       const filtered = athletes.filter(a => {
-        const eventsList = getAthleteEventsList(a);
+        if (!a) return false;
         if (currentAthleteFilter === 'ALL') return true;
-        if (currentAthleteFilter === 'Bóng đá') return a.category === 'Bóng đá' || a.category === 'Cả 2 môn';
-        if (currentAthleteFilter === 'Pickleball') return a.category === 'Pickleball' || a.category === 'Cả 2 môn';
-        return eventsList.includes(currentAthleteFilter);
+
+        const cat = a.category || 'Pickleball';
+        if (currentAthleteFilter === 'Bóng đá') {
+          return cat === 'Bóng đá' || cat === 'Cả 2 môn';
+        }
+        if (currentAthleteFilter === 'Pickleball') {
+          return cat === 'Pickleball' || cat === 'Cả 2 môn';
+        }
+
+        // Lấy danh sách nội dung thi đấu (hỗ trợ cả dữ liệu cũ lẫn mới)
+        let evList = [];
+        if (Array.isArray(a.events)) {
+          evList = a.events;
+        } else if (a.event) {
+          evList = [a.event];
+        } else if (a.events && typeof a.events === 'string') {
+          evList = [a.events];
+        }
+
+        return evList.some(ev => String(ev).toLowerCase().includes(currentAthleteFilter.toLowerCase()));
       });
 
       tbody.innerHTML = '';
       mobileList.innerHTML = '';
 
       if (filtered.length === 0) {
-        emptyState.classList.remove('hidden');
+        if (emptyState) emptyState.classList.remove('hidden');
       } else {
-        emptyState.classList.add('hidden');
+        if (emptyState) emptyState.classList.add('hidden');
       }
 
       const currentYear = new Date().getFullYear();
 
+      // 3. Vẽ danh sách VĐV ra màn hình
       filtered.forEach((ath, idx) => {
-        const age = ath.birthYear ? (currentYear - Number(ath.birthYear)) : '-';
-        const eventsList = getAthleteEventsList(ath);
+        const athId = ath.id || `ath_${idx}`;
+        const athName = ath.name || 'Chưa đặt tên';
+        const athYear = ath.birthYear || '';
+        const age = athYear ? (currentYear - Number(athYear)) : '-';
+        const athIns = ath.insurance || '-';
+        const athNotes = ath.notes || '-';
+        const cat = ath.category || 'Pickleball';
 
-        const catBadge = ath.category === 'Bóng đá' 
+        // Xử lý danh sách nội dung an toàn
+        let evList = [];
+        if (Array.isArray(ath.events)) {
+          evList = ath.events;
+        } else if (ath.event) {
+          evList = [ath.event];
+        } else if (ath.events && typeof ath.events === 'string') {
+          evList = [ath.events];
+        }
+
+        const catBadge = cat === 'Bóng đá' 
           ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">⚽ Bóng Đá</span>'
-          : ath.category === 'Pickleball'
+          : cat === 'Pickleball'
           ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">🏓 Pickleball</span>'
           : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">⚽ 🏓 Cả 2 môn</span>';
 
         let eventsBadgesHtml = '';
-        if (ath.category === 'Bóng đá') {
-          eventsBadgesHtml = '<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">⚽ Cầu thủ bóng đá</span>';
-        } else if (eventsList.length > 0) {
-          eventsBadgesHtml = `<div class="flex flex-wrap gap-1">` + eventsList.map(ev => {
+        if (cat === 'Bóng đá') {
+          eventsBadgesHtml = '<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">⚽ Cầu thủ</span>';
+        } else if (evList.length > 0) {
+          eventsBadgesHtml = `<div class="flex flex-wrap gap-1">` + evList.map(ev => {
             if (ev === 'Đôi nam') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">🎾 Đôi Nam</span>';
             if (ev === 'Đôi nữ') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">👭 Đôi Nữ</span>';
             if (ev === 'Đôi nam nữ') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">👫 Đôi Nam Nữ</span>';
             return `<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">${ev}</span>`;
           }).join('') + `</div>`;
         } else {
-          eventsBadgesHtml = '<span class="text-xs text-slate-400 italic">Chưa đăng ký nội dung</span>';
+          eventsBadgesHtml = '<span class="text-xs text-slate-400 italic">Đôi nam</span>';
         }
 
+        // Bảng Desktop
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition';
         tr.innerHTML = `
           <td class="py-3 px-4 text-center font-mono text-xs text-slate-400">${idx + 1}</td>
-          <td class="py-3 px-4 font-bold text-slate-800">${ath.name}</td>
+          <td class="py-3 px-4 font-bold text-slate-800">${athName}</td>
           <td class="py-3 px-4">${catBadge}</td>
           <td class="py-3 px-4">${eventsBadgesHtml}</td>
-          <td class="py-3 px-4 text-slate-700 font-medium">${ath.birthYear} <span class="text-xs text-slate-400">(${age} tuổi)</span></td>
-          <td class="py-3 px-4 font-mono font-semibold text-blue-700">${ath.insurance || '-'}</td>
-          <td class="py-3 px-4 text-slate-600 text-xs">${ath.notes || '-'}</td>
+          <td class="py-3 px-4 text-slate-700 font-medium">${athYear} <span class="text-xs text-slate-400">(${age} tuổi)</span></td>
+          <td class="py-3 px-4 font-mono font-semibold text-blue-700">${athIns}</td>
+          <td class="py-3 px-4 text-slate-600 text-xs">${athNotes}</td>
           <td class="py-3 px-4 text-center">
             <div class="flex items-center justify-center gap-1.5">
-              <button onclick="editAthlete('${ath.id}')" class="text-blue-600 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50">✏️ Sửa</button>
-              <button onclick="deleteAthlete('${ath.id}')" class="text-rose-600 font-medium text-xs px-2 py-1 rounded hover:bg-rose-50">🗑️ Xoá</button>
+              <button onclick="editAthlete('${athId}')" class="text-blue-600 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50">✏️ Sửa</button>
+              <button onclick="deleteAthlete('${athId}')" class="text-rose-600 font-medium text-xs px-2 py-1 rounded hover:bg-rose-50">🗑️ Xoá</button>
             </div>
           </td>
         `;
-        tbodyDesktop.appendChild(tr);
+        tbody.appendChild(tr);
 
+        // Danh sách Mobile
         const card = document.createElement('div');
         card.className = 'p-3.5 flex flex-col gap-1.5 hover:bg-slate-50';
         card.innerHTML = `
           <div class="flex items-center justify-between">
-            <span class="font-bold text-sm text-slate-900">${ath.name}</span>
+            <span class="font-bold text-sm text-slate-900">${athName}</span>
             ${catBadge}
           </div>
           <div class="flex items-start gap-1.5 mt-0.5">
@@ -989,14 +1038,14 @@
             ${eventsBadgesHtml}
           </div>
           <div class="text-xs text-slate-600 space-y-0.5 mt-1">
-            <p><span class="text-slate-400">Năm sinh:</span> <span class="font-semibold text-slate-800">${ath.birthYear}</span> (${age} tuổi)</p>
-            <p><span class="text-slate-400">Số BHXH:</span> <span class="font-mono font-bold text-blue-700">${ath.insurance || 'Chưa có'}</span></p>
-            ${ath.notes ? `<p><span class="text-slate-400">Ghi chú:</span> ${ath.notes}</p>` : ''}
+            <p><span class="text-slate-400">Năm sinh:</span> <span class="font-semibold text-slate-800">${athYear}</span> (${age} tuổi)</p>
+            <p><span class="text-slate-400">Số BHXH:</span> <span class="font-mono font-bold text-blue-700">${athIns}</span></p>
+            ${athNotes !== '-' ? `<p><span class="text-slate-400">Ghi chú:</span> ${athNotes}</p>` : ''}
           </div>
           <div class="flex justify-end gap-3 pt-2 border-t border-slate-100 mt-1">
-            <button onclick="editAthlete('${ath.id}')" class="text-xs text-blue-600 font-medium">✏️ Sửa</button>
+            <button onclick="editAthlete('${athId}')" class="text-xs text-blue-600 font-medium">✏️ Sửa</button>
             <span class="text-slate-300">|</span>
-            <button onclick="deleteAthlete('${ath.id}')" class="text-xs text-rose-600 font-medium">🗑️ Xoá</button>
+            <button onclick="deleteAthlete('${athId}')" class="text-xs text-rose-600 font-medium">🗑️ Xoá</button>
           </div>
         `;
         mobileList.appendChild(card);
