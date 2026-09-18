@@ -913,7 +913,7 @@
       let total = athletes.length;
       let fbCount = 0;
       let pbCount = 0;
-      let doublesCount = 0;
+  
 
       athletes.forEach(a => {
         if (a.category === 'Bóng đá' || a.category === 'Cả 2 môn') fbCount++;
@@ -928,7 +928,6 @@
       document.getElementById('statTotalAthletes').textContent = total;
       document.getElementById('statFootballAthletes').textContent = fbCount;
       document.getElementById('statPickleballAthletes').textContent = pbCount;
-      document.getElementById('statDoublesAthletes').textContent = doublesCount;
       document.getElementById('athleteCountHeader').textContent = total;
 
       const filtered = athletes.filter(a => {
