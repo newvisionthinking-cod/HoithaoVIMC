@@ -173,9 +173,9 @@
       </button>
     </div>
 
-    <!-- Bộ Lọc VĐV -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible">
-      <div class="flex items-center border-b border-slate-200 text-xs sm:text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2 overflow-x-auto">
+    <!-- Bộ Lọc VĐV (Được sửa cố định vị trí Dropdown bám chuẩn nút bấm) -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible relative">
+      <div class="flex items-center border-b border-slate-200 text-xs sm:text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2">
         <button onclick="selectAthleteFilter('ALL', 'Tất Cả')" id="tabAth-ALL" class="tabAth-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap transition">
           Tất Cả
         </button>
@@ -183,14 +183,14 @@
           ⚽ Bóng Đá
         </button>
 
-        <!-- Dropdown Pickleball -->
+        <!-- Dropdown Pickleball: Căn bám sát bên dưới nút, tuyệt đối không bị dạt sang phải -->
         <div class="relative inline-block text-left" id="pickleballDropdownWrapper">
           <button type="button" onclick="togglePickleballDropdown(event)" id="tabAth-Pickleball" class="tabAth-btn py-3 px-3 sm:px-4 whitespace-nowrap flex items-center gap-1.5 transition text-indigo-700 hover:text-indigo-900">
             <span id="pickleballBtnLabel">🏓 Pickleball</span>
             <span id="pickleballCaret" class="text-[10px] text-slate-400">▼</span>
           </button>
 
-          <div id="pickleballMenu" class="hidden absolute left-0 sm:left-auto top-full mt-1 w-52 rounded-xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 py-1.5 divide-y divide-slate-100">
+          <div id="pickleballMenu" class="hidden absolute left-0 top-full mt-1.5 w-52 rounded-xl shadow-2xl bg-white border border-slate-200 ring-1 ring-black/5 z-50 py-1.5 divide-y divide-slate-100">
             <div class="py-1">
               <button onclick="selectAthleteFilter('PB_ALL', '🏓 Tất cả Pickleball')" class="w-full text-left px-4 py-2 text-xs sm:text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2 font-medium">
                 <span>🏓</span> Tất cả Pickleball
@@ -211,7 +211,7 @@
         </div>
       </div>
 
-      <!-- Bảng Desktop VĐV (Xuống dòng tự nhiên, độ rộng vừa vặn) -->
+      <!-- Bảng Desktop VĐV (Tự co giãn, xuống dòng tự nhiên) -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-left text-sm">
           <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
@@ -831,7 +831,7 @@
       }
     }
 
-    // ==================== PHẦN VẬN ĐỘNG VIÊN ====================
+    // ==================== PHẦN VẬN ĐỘNG VIÊN: BỘ LỌC CHUẨN XÁC TUYỆT ĐỐI ====================
     const EVENT_KEYS = {
       doi_nam: '🎾 Đôi Nam',
       doi_nu: '👭 Đôi Nữ',
@@ -840,32 +840,43 @@
       don_nu: 'Đơn Nữ'
     };
 
+    // Chuẩn hóa mọi định dạng lưu trữ về danh sách mã chuẩn
     function normalizeEvents(ath) {
       if (!ath) return [];
-      let rawList = [];
+      let rawItems = [];
 
       if (Array.isArray(ath.events)) {
-        rawList = ath.events;
+        rawItems = ath.events;
       } else if (typeof ath.events === 'string' && ath.events.trim()) {
-        rawList = ath.events.split(/[,;]/);
+        rawItems = ath.events.split(/[,;+]/);
       } else if (typeof ath.event === 'string' && ath.event.trim()) {
-        rawList = ath.event.split(/[,;]/);
+        rawItems = ath.event.split(/[,;+]/);
       }
 
       const keys = new Set();
-      rawList.forEach(item => {
-        const s = String(item).trim().toLowerCase();
-        if (!s) return;
+      rawItems.forEach(item => {
+        let str = String(item).trim().toLowerCase();
+        if (!str) return;
 
-        if (s === 'doi_nam_nu' || s.includes('nam nữ') || s.includes('nam nu')) {
+        // Bỏ các ký tự emoji, dấu ngoặc để so sánh chuẩn
+        str = str.replace(/[🎾👭👫⚽🏓\[\]\(\)]/g, '').trim();
+
+        // 1. Kiểm tra Đôi nam nữ trước tiên
+        if (str === 'doi_nam_nu' || str.includes('nam nữ') || str.includes('nam nu') || str.includes('hỗn hợp')) {
           keys.add('doi_nam_nu');
-        } else if (s === 'doi_nu' || (s.includes('đôi nữ') || s.includes('doi nu'))) {
+        } 
+        // 2. Kiểm tra Đôi nữ (không dính chữ nam)
+        else if (str === 'doi_nu' || (str.includes('nữ') && !str.includes('nam')) || (str.includes('nu') && !str.includes('nam'))) {
           keys.add('doi_nu');
-        } else if (s === 'doi_nam' || (s.includes('đôi nam') || s.includes('doi nam'))) {
+        } 
+        // 3. Kiểm tra Đôi nam (tuyệt đối không có chữ nữ)
+        else if (str === 'doi_nam' || (str.includes('đôi nam') && !str.includes('nữ')) || (str.includes('doi nam') && !str.includes('nu'))) {
           keys.add('doi_nam');
-        } else if (s === 'don_nam' || s.includes('đơn nam') || s.includes('don nam')) {
+        } 
+        // 4. Kiểm tra Đơn nam / Đơn nữ
+        else if (str === 'don_nam' || str.includes('đơn nam') || str.includes('don nam')) {
           keys.add('don_nam');
-        } else if (s === 'don_nu' || s.includes('đơn nữ') || s.includes('don nu')) {
+        } else if (str === 'don_nu' || str.includes('đơn nữ') || str.includes('don nu')) {
           keys.add('don_nu');
         }
       });
@@ -889,6 +900,7 @@
       }
     }
 
+    // Đóng dropdown khi bấm ra ngoài
     document.addEventListener('click', function(event) {
       const dropdownWrapper = document.getElementById('pickleballDropdownWrapper');
       const menu = document.getElementById('pickleballMenu');
@@ -950,6 +962,7 @@
 
       if (!tbody || !mobileList) return;
 
+      // 1. Thống kê quân số duy nhất dựa theo mã BHXH
       const allUniqueInsurances = new Set();
       const footballInsurances = new Set();
       const pickleballInsurances = new Set();
@@ -974,7 +987,7 @@
       if (document.getElementById('statPickleballAthletes')) document.getElementById('statPickleballAthletes').textContent = pickleballInsurances.size;
       if (document.getElementById('athleteCountHeader')) document.getElementById('athleteCountHeader').textContent = allUniqueInsurances.size;
 
-      // Lọc danh sách chuẩn xác
+      // 2. Lọc danh sách: Đối soát chính xác tuyệt đối
       const filtered = athletes.filter(a => {
         if (!a) return false;
         if (currentAthleteFilter === 'ALL') return true;
@@ -987,6 +1000,7 @@
           return sport === 'Pickleball' || sport === 'Cả 2 môn';
         }
 
+        // Lọc theo từng nội dung đôi: Đôi nam, Đôi nữ, Đôi nam nữ
         const normKeys = normalizeEvents(a);
         return normKeys.includes(currentAthleteFilter);
       });
@@ -1002,7 +1016,7 @@
 
       const currentYear = new Date().getFullYear();
 
-      // Render danh sách (cho phép xuống dòng tự nhiên)
+      // 3. Render danh sách
       filtered.forEach((ath, idx) => {
         const athId = String(ath.id || idx);
         const athName = ath.name || 'Chưa đặt tên';
@@ -1035,7 +1049,7 @@
           eventsBadgesHtml = '<span class="text-xs text-slate-400 italic">Chưa xếp nội dung</span>';
         }
 
-        // Bảng Desktop (Co giãn tự nhiên)
+        // Bảng Desktop
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition';
         tr.innerHTML = `
@@ -1121,6 +1135,7 @@
       document.getElementById('athCategory').value = a.category || 'Pickleball';
       handleSportChange();
 
+      // Bắt chuẩn các checkbox khi sửa
       const normKeys = normalizeEvents(a);
       document.querySelectorAll('input[name="pbEvent"]').forEach(cb => {
         cb.checked = normKeys.includes(cb.value);
@@ -1175,7 +1190,7 @@
         id: editId || Date.now().toString(),
         name,
         category,
-        events: selectedKeys,
+        events: selectedKeys, // Lưu mảng mã chuẩn: ['doi_nam', 'doi_nam_nu']
         birthYear,
         insurance,
         notes
