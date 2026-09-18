@@ -42,7 +42,7 @@
       </div>
     </div>
 
-    <!-- Thanh Điều Hướng 2 Phân Hệ -->
+    <!-- Thanh Điều Hướng -->
     <div class="bg-blue-900/80 px-4 py-1.5 border-t border-blue-700/50">
       <div class="max-w-5xl mx-auto flex gap-2 text-xs sm:text-sm font-medium">
         <button onclick="switchMainTab('EXPENSES')" id="nav-btn-expenses" class="nav-btn px-3 py-1.5 rounded-lg text-blue-100 hover:text-white transition flex items-center gap-1.5 nav-btn-active">
@@ -55,7 +55,7 @@
     </div>
   </header>
 
-  <!-- ==================== PHÂN HỆ 1: QUẢN LÝ CHI PHÍ ==================== -->
+  <!-- ==================== PHÂN HỆ 1: CHI PHÍ ==================== -->
   <section id="sectionExpenses" class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6">
     <!-- KPI Summary Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
@@ -67,7 +67,6 @@
         <p class="text-[11px] text-slate-400 mt-2">Nguồn kinh phí đã nhận</p>
       </div>
 
-      <!-- Thẻ Tổng Đã Chi -->
       <div class="bg-white rounded-xl shadow-sm border border-rose-200 overflow-hidden">
         <button type="button" onclick="toggleExpenseBreakdown()" class="w-full p-4 text-left flex items-start justify-between bg-rose-50/40 hover:bg-rose-50/80 transition">
           <div>
@@ -110,7 +109,7 @@
       </button>
     </div>
 
-    <!-- Danh Sách Chi Phí & Bộ Lọc -->
+    <!-- Danh Sách Chi Phí -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="flex border-b border-slate-200 text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2 overflow-x-auto">
         <button onclick="filterCategory('ALL')" id="tab-ALL" class="tab-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap">Tất Cả</button>
@@ -145,9 +144,9 @@
     </div>
   </section>
 
-  <!-- ==================== PHÂN HỆ 2: QUẢN LÝ VẬN ĐỘNG VIÊN ==================== -->
+  <!-- ==================== PHÂN HỆ 2: VẬN ĐỘNG VIÊN ==================== -->
   <section id="sectionAthletes" class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6 hidden">
-    <!-- 3 Thẻ Thống Kê Cân Đối -->
+    <!-- 3 Thẻ Cân Đối -->
     <div class="grid grid-cols-3 gap-2.5 sm:gap-3 mb-4">
       <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 text-center">
         <span class="text-xs font-semibold text-slate-500 uppercase">Tổng VĐV</span>
@@ -166,7 +165,7 @@
       </div>
     </div>
 
-    <!-- Banner Đăng Ký VĐV -->
+    <!-- Banner VĐV -->
     <div class="bg-gradient-to-r from-slate-800 to-blue-900 text-white p-4 sm:p-5 rounded-2xl shadow-md mb-4 flex items-center justify-between">
       <div>
         <p class="text-xs uppercase font-medium text-slate-300 tracking-wider">Danh Sách Nhân Sự Thi Đấu</p>
@@ -177,7 +176,7 @@
       </button>
     </div>
 
-    <!-- Bộ Lọc Danh Mục VĐV -->
+    <!-- Bộ Lọc VĐV -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible">
       <div class="flex items-center border-b border-slate-200 text-xs sm:text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2">
         <button onclick="selectAthleteFilter('ALL', 'Tất Cả')" id="tabAth-ALL" class="tabAth-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap transition">
@@ -187,7 +186,6 @@
           ⚽ Bóng Đá
         </button>
 
-        <!-- Menu xổ xuống cho Pickleball -->
         <div class="relative inline-block text-left" id="pickleballDropdownWrapper">
           <button type="button" onclick="togglePickleballDropdown(event)" id="tabAth-Pickleball" class="tabAth-btn py-3 px-3 sm:px-4 whitespace-nowrap flex items-center gap-1.5 transition text-indigo-700 hover:text-indigo-900">
             <span id="pickleballBtnLabel">🏓 Pickleball</span>
@@ -226,7 +224,7 @@
               <th class="py-3 px-4 font-semibold">Nội Dung Tham Gia</th>
               <th class="py-3 px-4 font-semibold">Năm Sinh (Tuổi)</th>
               <th class="py-3 px-4 font-semibold">Mã Số BHXH</th>
-              <th class="py-3 px-4 font-semibold">Ghi Chú / Vị Trí / Bạn Đôi</th>
+              <th class="py-3 px-4 font-semibold">Ghi Chú / Bạn Đôi</th>
               <th class="py-3 px-4 font-semibold text-center">Thao Tác</th>
             </tr>
           </thead>
@@ -279,12 +277,12 @@
 
         <div>
           <label class="block font-medium text-slate-700 mb-1 text-xs">Chi Cho Ai / Người Nhận</label>
-          <input type="text" id="txPerson" placeholder="VD: Sân bóng, Cửa hàng thể thao, Nguyễn Văn A..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+          <input type="text" id="txPerson" placeholder="VD: Sân bóng, Cửa hàng thể thao..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
         </div>
 
         <div>
           <label class="block font-medium text-slate-700 mb-1 text-xs">Nội Dung Chi</label>
-          <input type="text" id="txDescription" placeholder="VD: Tiền thuê sân tập, Nước uống, Bóng thi đấu..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+          <input type="text" id="txDescription" placeholder="VD: Thuê sân, Nước uống..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
         </div>
 
         <div>
@@ -292,7 +290,6 @@
           <input type="number" id="txAmount" placeholder="0" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold">
         </div>
 
-        <!-- Tệp Đính Kèm -->
         <div class="border-t border-slate-200 pt-2.5">
           <div class="flex items-center justify-between mb-1">
             <label class="block font-semibold text-slate-700 text-xs">Tệp Đính Kèm (Tối đa 10 tệp)</label>
@@ -342,7 +339,6 @@
           </select>
         </div>
 
-        <!-- Khung chọn nội dung Pickleball -->
         <div id="pickleballEventsBox" class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2">
           <label class="block font-semibold text-indigo-900 text-xs">Nội dung Pickleball (Tích chọn nhiều nội dung):</label>
           <div class="grid grid-cols-2 gap-2 text-xs">
@@ -381,8 +377,8 @@
         </div>
 
         <div>
-          <label class="block font-medium text-slate-700 mb-1 text-xs">Ghi Chú / Vị Trí / Bạn Cùng Đôi</label>
-          <input type="text" id="athNotes" placeholder="VD: Đôi nam cặp với anh B; Đôi nam nữ cặp với chị C..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Ghi Chú / Bạn Cùng Đôi</label>
+          <input type="text" id="athNotes" placeholder="VD: Đôi nam cặp với B..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
         </div>
 
         <div class="pt-3 flex gap-2 border-t border-slate-200 shrink-0">
@@ -409,7 +405,7 @@
     </div>
   </div>
 
-  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+  <!-- ==================== JAVASCRIPT ==================== -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyApjuT6bCk-3B6TbwyB0JsEqdY2Bze-8Bg",
@@ -430,7 +426,7 @@
         isCloudReady = true;
       }
     } catch(err) {
-      console.warn("Lỗi khởi tạo Firebase:", err);
+      console.warn("Lỗi Firebase:", err);
     }
 
     const EXPENSES_STORAGE_KEY = 'HOI_THAO_VIMC_EXPENSES';
@@ -491,7 +487,6 @@
       }
     }
 
-    // ==================== PHẦN CHI PHÍ ====================
     function toggleExpenseBreakdown() {
       const breakdown = document.getElementById('expenseBreakdown');
       const chevron = document.getElementById('expenseChevron');
@@ -723,7 +718,7 @@
       const remainingSlots = 10 - currentFiles.length;
 
       if (remainingSlots <= 0) {
-        alert('Tối đa 10 tệp đính kèm cho mỗi mục!');
+        alert('Tối đa 10 tệp đính kèm!');
         return;
       }
 
@@ -925,7 +920,6 @@
         if (currentAthleteFilter === 'ALL') return true;
         if (currentAthleteFilter === 'Bóng đá') return a.category === 'Bóng đá' || a.category === 'Cả 2 môn';
         if (currentAthleteFilter === 'Pickleball') return a.category === 'Pickleball' || a.category === 'Cả 2 môn';
-        
         return eventsList.includes(currentAthleteFilter);
       });
 
@@ -964,7 +958,6 @@
           eventsBadgesHtml = '<span class="text-xs text-slate-400 italic">Chưa đăng ký nội dung</span>';
         }
 
-        // Desktop Row
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition';
         tr.innerHTML = `
@@ -984,7 +977,6 @@
         `;
         tbodyDesktop.appendChild(tr);
 
-        // Mobile Card
         const card = document.createElement('div');
         card.className = 'p-3.5 flex flex-col gap-1.5 hover:bg-slate-50';
         card.innerHTML = `
@@ -1059,7 +1051,6 @@
       document.getElementById('modalAthlete').classList.add('flex');
     }
 
-    // HÀM LƯU VĐV ĐƯỢC NÂNG CẤP: LƯU TỨC THÌ VÀO MÀN HÌNH & BỘ NHỚ
     function saveAthleteNow() {
       const editId = document.getElementById('athId').value;
       const name = document.getElementById('athName').value.trim();
@@ -1074,13 +1065,13 @@
           selectedEvents.push(cb.value);
         });
         if (selectedEvents.length === 0) {
-          alert("Vui lòng tích chọn ít nhất một nội dung thi đấu Pickleball (Ví dụ: Đôi nam, Đôi nam nữ...)!");
+          alert("Vui lòng chọn ít nhất một nội dung thi đấu Pickleball!");
           return;
         }
       }
 
       if (!name) {
-        alert("Vui lòng nhập Họ và Tên vận động viên!");
+        alert("Vui lòng nhập Họ và Tên VĐV!");
         return;
       }
       if (!birthYear) {
@@ -1088,7 +1079,7 @@
         return;
       }
       if (!insurance) {
-        alert("Vui lòng nhập Mã số BHXH để hệ thống phân biệt danh tính và loại trừ trùng lặp!");
+        alert("Vui lòng nhập Mã số BHXH để phân biệt danh tính!");
         return;
       }
 
@@ -1102,7 +1093,6 @@
         notes
       };
 
-      // 1. Cập nhật ngay vào danh sách màn hình
       if (editId) {
         const idx = athletes.findIndex(a => a.id === editId);
         if (idx !== -1) athletes[idx] = athItem;
@@ -1110,20 +1100,16 @@
         athletes.push(athItem);
       }
 
-      // 2. Lưu ngay vào LocalStorage
       localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
       renderAthletes();
       closeAthleteModal();
 
-      // 3. Đẩy lên Cloud chạy ngầm (không để nghẽn màn hình)
       if (isCloudReady && db) {
         db.collection("athletes").doc(athItem.id).set(athItem)
-          .then(() => {
-            updateCloudBadge('success', 'Đã đồng bộ');
-          })
+          .then(() => updateCloudBadge('success', 'Đã đồng bộ'))
           .catch(err => {
             console.error("Lỗi sync Cloud VĐV:", err);
-            updateCloudBadge('warning', 'Lưu tạm máy (Lỗi Cloud)');
+            updateCloudBadge('warning', 'Lưu tạm máy');
           });
       }
     }
@@ -1142,7 +1128,6 @@
       }
     }
 
-    // ==================== XUẤT EXCEL ====================
     function exportCurrentView() {
       if (currentMainTab === 'EXPENSES') {
         exportExpensesExcel();
@@ -1153,7 +1138,7 @@
 
     function exportExpensesExcel() {
       if (transactions.length === 0) {
-        alert('Chưa có dữ liệu chi tiêu để xuất file!');
+        alert('Chưa có dữ liệu chi tiêu!');
         return;
       }
       const rows = transactions.map((t, idx) => ({
@@ -1175,7 +1160,7 @@
 
     function exportAthletesExcel() {
       if (athletes.length === 0) {
-        alert('Chưa có dữ liệu vận động viên để xuất!');
+        alert('Chưa có dữ liệu VĐV!');
         return;
       }
       const currentYear = new Date().getFullYear();
@@ -1199,7 +1184,6 @@
       XLSX.writeFile(wb, `Danh_Sach_VDV_Hoi_Thao_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
-    // ==================== XEM CHỨNG TỪ ====================
     function previewFile(txId, idx) {
       const tx = transactions.find(t => t.id === txId);
       if (!tx || !tx.files || !tx.files[idx]) return;
@@ -1233,7 +1217,7 @@
       document.getElementById('viewModal').classList.remove('flex');
     }
 
-    // ==================== KHỞI CHẠY & REAL-TIME SYNC ====================
+    // ĐỒNG BỘ REAL-TIME CHUẨN XÁC
     function startApp() {
       renderExpenses();
       renderAthletes();
@@ -1241,7 +1225,7 @@
       if (isCloudReady && db) {
         updateCloudBadge('warning', 'Đang kết nối Cloud...');
 
-        // 1. Đồng bộ bảng Chi phí
+        // 1. Lắng nghe chi phí
         db.collection("expenses").onSnapshot((snapshot) => {
           const cloudExp = [];
           snapshot.forEach(doc => cloudExp.push({ id: doc.id, ...doc.data() }));
@@ -1251,39 +1235,17 @@
             renderExpenses();
           }
           updateCloudBadge('success', 'Đã đồng bộ');
-        }, err => {
-          console.warn("Lỗi listener expenses:", err);
-          updateCloudBadge('error', 'Lỗi Cloud');
-        });
+        }, err => console.warn("Lỗi listener expenses:", err));
 
-        // 2. Đồng bộ bảng Vận động viên
+        // 2. Lắng nghe vận động viên (tải về là vẽ bảng ngay)
         db.collection("athletes").onSnapshot((snapshot) => {
           const cloudAth = [];
-          snapshot.forEach(doc => {
-            cloudAth.push({ id: doc.id, ...doc.data() });
-          });
+          snapshot.forEach(doc => cloudAth.push({ id: doc.id, ...doc.data() }));
           athletes = cloudAth;
           localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
-          renderAthletes(); // Luôn luôn vẽ lại bảng ngay lập tức
+          renderAthletes();
           updateCloudBadge('success', 'Đã đồng bộ');
-        }, err => {
-          console.warn("Lỗi listener athletes:", err);
-          updateCloudBadge('error', 'Lỗi Cloud');
-        });
-          const cloudAth = [];
-          snapshot.forEach(doc => cloudAth.push({ id: doc.id, ...doc.data() }));
-          
-          // Chỉ ghi đè danh sách khi trên Cloud thực sự có dữ liệu
-          if (cloudAth.length > 0) {
-            athletes = cloudAth;
-            localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
-            renderAthletes();
-          }
-          updateCloudBadge('success', 'Đã đồng bộ');
-        }, err => {
-          console.warn("Lỗi listener athletes:", err);
-          updateCloudBadge('error', 'Lỗi Cloud');
-        });
+        }, err => console.warn("Lỗi listener athletes:", err));
 
       } else {
         updateCloudBadge('warning', 'Chế độ Local');
