@@ -1259,6 +1259,18 @@
         // 2. Đồng bộ bảng Vận động viên
         db.collection("athletes").onSnapshot((snapshot) => {
           const cloudAth = [];
+          snapshot.forEach(doc => {
+            cloudAth.push({ id: doc.id, ...doc.data() });
+          });
+          athletes = cloudAth;
+          localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
+          renderAthletes(); // Luôn luôn vẽ lại bảng ngay lập tức
+          updateCloudBadge('success', 'Đã đồng bộ');
+        }, err => {
+          console.warn("Lỗi listener athletes:", err);
+          updateCloudBadge('error', 'Lỗi Cloud');
+        });
+          const cloudAth = [];
           snapshot.forEach(doc => cloudAth.push({ id: doc.id, ...doc.data() }));
           
           // Chỉ ghi đè danh sách khi trên Cloud thực sự có dữ liệu
