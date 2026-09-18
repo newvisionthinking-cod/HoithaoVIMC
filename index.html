@@ -6,7 +6,7 @@
   <title>Quản Lý Hội Thao VIMC - Chi Phí & Vận Động Viên</title>
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Firebase SDK v8.10.1 ổn định -->
+  <!-- Firebase SDK v8.10.1 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <!-- SheetJS xuất Excel -->
@@ -42,7 +42,7 @@
       </div>
     </div>
 
-    <!-- Thanh Điều Hướng 2 Phân Hệ Lớn -->
+    <!-- Thanh Điều Hướng 2 Phân Hệ -->
     <div class="bg-blue-900/80 px-4 py-1.5 border-t border-blue-700/50">
       <div class="max-w-5xl mx-auto flex gap-2 text-xs sm:text-sm font-medium">
         <button onclick="switchMainTab('EXPENSES')" id="nav-btn-expenses" class="nav-btn px-3 py-1.5 rounded-lg text-blue-100 hover:text-white transition flex items-center gap-1.5 nav-btn-active">
@@ -147,7 +147,7 @@
 
   <!-- ==================== PHÂN HỆ 2: QUẢN LÝ VẬN ĐỘNG VIÊN ==================== -->
   <section id="sectionAthletes" class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6 hidden">
-    <!-- 3 Thẻ Thống Kê Cân Đối (Khử Trùng Lặp Chuẩn Xác Theo BHXH) -->
+    <!-- 3 Thẻ Thống Kê Cân Đối -->
     <div class="grid grid-cols-3 gap-2.5 sm:gap-3 mb-4">
       <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 text-center">
         <span class="text-xs font-semibold text-slate-500 uppercase">Tổng VĐV</span>
@@ -177,7 +177,7 @@
       </button>
     </div>
 
-    <!-- Bộ Lọc Danh Mục VĐV Gọn Gàng: Tất Cả, Bóng Đá, Pickleball (Dropdown) -->
+    <!-- Bộ Lọc Danh Mục VĐV -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible">
       <div class="flex items-center border-b border-slate-200 text-xs sm:text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2">
         <button onclick="selectAthleteFilter('ALL', 'Tất Cả')" id="tabAth-ALL" class="tabAth-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap transition">
@@ -194,7 +194,7 @@
             <span id="pickleballCaret" class="text-[10px] text-slate-400 transform transition-transform duration-200">▼</span>
           </button>
 
-          <div id="pickleballMenu" class="hidden absolute left-0 sm:left-auto top-full mt-1 w-52 rounded-xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 py-1.5 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100">
+          <div id="pickleballMenu" class="hidden absolute left-0 sm:left-auto top-full mt-1 w-52 rounded-xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 py-1.5 divide-y divide-slate-100">
             <div class="py-1">
               <button onclick="selectAthleteFilter('Pickleball', '🏓 Tất cả Pickleball')" class="w-full text-left px-4 py-2 text-xs sm:text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2 font-medium">
                 <span>🏓</span> Tất cả Pickleball
@@ -317,7 +317,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL VẬN ĐỘNG VIÊN: ĐA CHỌN NỘI DUNG ==================== -->
+  <!-- ==================== MODAL VẬN ĐỘNG VIÊN ==================== -->
   <div id="modalAthlete" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col">
       <div class="px-5 py-3.5 bg-slate-100 border-b border-slate-200 flex justify-between items-center shrink-0">
@@ -342,7 +342,7 @@
           </select>
         </div>
 
-        <!-- Khung chọn nhiều nội dung Pickleball cùng lúc -->
+        <!-- Khung chọn nội dung Pickleball -->
         <div id="pickleballEventsBox" class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2">
           <label class="block font-semibold text-indigo-900 text-xs">Nội dung Pickleball (Tích chọn nhiều nội dung):</label>
           <div class="grid grid-cols-2 gap-2 text-xs">
@@ -411,7 +411,6 @@
 
   <!-- ==================== JAVASCRIPT LOGIC ==================== -->
   <script>
-    // THÔNG TIN FIREBASE THẬT CỦA BẠN (ĐÃ ĐIỀN CHUẨN XÁC)
     const firebaseConfig = {
       apiKey: "AIzaSyApjuT6bCk-3B6TbwyB0JsEqdY2Bze-8Bg",
       authDomain: "hoithaovimc.firebaseapp.com",
@@ -431,7 +430,7 @@
         isCloudReady = true;
       }
     } catch(err) {
-      console.warn("Chưa cấu hình Firebase hoặc lỗi:", err);
+      console.warn("Lỗi khởi tạo Firebase:", err);
     }
 
     const EXPENSES_STORAGE_KEY = 'HOI_THAO_VIMC_EXPENSES';
@@ -769,7 +768,7 @@
       });
     }
 
-    async function saveDataNow() {
+    function saveDataNow() {
       const editId = document.getElementById('txId').value;
       const date = document.getElementById('txDate').value;
       const person = document.getElementById('txPerson').value.trim();
@@ -800,16 +799,13 @@
       closeModal();
 
       if (isCloudReady && db) {
-        try {
-          await db.collection("expenses").doc(txItem.id).set(txItem);
-          updateCloudBadge('success', 'Đã đồng bộ');
-        } catch(err) {
-          console.error("Lỗi sync Cloud chi phí:", err);
-        }
+        db.collection("expenses").doc(txItem.id).set(txItem)
+          .then(() => updateCloudBadge('success', 'Đã đồng bộ'))
+          .catch(err => console.error("Lỗi sync Cloud chi phí:", err));
       }
     }
 
-    async function deleteTx(id) {
+    function deleteTx(id) {
       const item = transactions.find(t => t.id === id);
       const desc = item ? item.description : 'mục này';
       if (confirm(`Bạn có chắc muốn xoá khoản "${desc}"?`)) {
@@ -818,16 +814,12 @@
         renderExpenses();
 
         if (isCloudReady && db) {
-          try {
-            await db.collection("expenses").doc(id).delete();
-          } catch(e) {
-            console.error("Lỗi xóa cloud:", e);
-          }
+          db.collection("expenses").doc(id).delete().catch(e => console.error("Lỗi xóa cloud:", e));
         }
       }
     }
 
-    // ==================== PHẦN VẬN ĐỘNG VIÊN: LỌC TRÙNG THEO BHXH ====================
+    // ==================== PHẦN VẬN ĐỘNG VIÊN ====================
     function togglePickleballDropdown(e) {
       e.stopPropagation();
       const menu = document.getElementById('pickleballMenu');
@@ -896,7 +888,6 @@
       }
     }
 
-    // Chuẩn hóa lấy danh sách các nội dung VĐV tham gia
     function getAthleteEventsList(ath) {
       if (Array.isArray(ath.events)) return ath.events;
       if (ath.event) return [ath.event];
@@ -908,7 +899,6 @@
       const mobileList = document.getElementById('athleteListMobile');
       const emptyState = document.getElementById('athleteEmptyState');
 
-      // TÍNH TOÁN ĐẾM NGƯỜI DUY NHẤT DỰA VÀO SỐ BHXH (Set Data Structure)
       const allUniqueInsurances = new Set();
       const footballInsurances = new Set();
       const pickleballInsurances = new Set();
@@ -925,13 +915,11 @@
         }
       });
 
-      // Cập nhật 3 thẻ số liệu chuẩn đếm người
       document.getElementById('statTotalAthletes').textContent = allUniqueInsurances.size;
       document.getElementById('statFootballAthletes').textContent = footballInsurances.size;
       document.getElementById('statPickleballAthletes').textContent = pickleballInsurances.size;
       document.getElementById('athleteCountHeader').textContent = allUniqueInsurances.size;
 
-      // Lọc danh sách theo nội dung người dùng đang chọn
       const filtered = athletes.filter(a => {
         const eventsList = getAthleteEventsList(a);
         if (currentAthleteFilter === 'ALL') return true;
@@ -962,7 +950,6 @@
           ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">🏓 Pickleball</span>'
           : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">⚽ 🏓 Cả 2 môn</span>';
 
-        // Tạo chuỗi huy hiệu các nội dung VĐV tham gia
         let eventsBadgesHtml = '';
         if (ath.category === 'Bóng đá') {
           eventsBadgesHtml = '<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">⚽ Cầu thủ bóng đá</span>';
@@ -1072,7 +1059,8 @@
       document.getElementById('modalAthlete').classList.add('flex');
     }
 
-    async function saveAthleteNow() {
+    // HÀM LƯU VĐV ĐƯỢC NÂNG CẤP: LƯU TỨC THÌ VÀO MÀN HÌNH & BỘ NHỚ
+    function saveAthleteNow() {
       const editId = document.getElementById('athId').value;
       const name = document.getElementById('athName').value.trim();
       const category = document.getElementById('athCategory').value;
@@ -1114,6 +1102,7 @@
         notes
       };
 
+      // 1. Cập nhật ngay vào danh sách màn hình
       if (editId) {
         const idx = athletes.findIndex(a => a.id === editId);
         if (idx !== -1) athletes[idx] = athItem;
@@ -1121,21 +1110,25 @@
         athletes.push(athItem);
       }
 
+      // 2. Lưu ngay vào LocalStorage
       localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
       renderAthletes();
       closeAthleteModal();
 
+      // 3. Đẩy lên Cloud chạy ngầm (không để nghẽn màn hình)
       if (isCloudReady && db) {
-        try {
-          await db.collection("athletes").doc(athItem.id).set(athItem);
-          updateCloudBadge('success', 'Đã đồng bộ');
-        } catch(err) {
-          console.error("Lỗi sync Cloud VĐV:", err);
-        }
+        db.collection("athletes").doc(athItem.id).set(athItem)
+          .then(() => {
+            updateCloudBadge('success', 'Đã đồng bộ');
+          })
+          .catch(err => {
+            console.error("Lỗi sync Cloud VĐV:", err);
+            updateCloudBadge('warning', 'Lưu tạm máy (Lỗi Cloud)');
+          });
       }
     }
 
-    async function deleteAthlete(id) {
+    function deleteAthlete(id) {
       const a = athletes.find(item => item.id === id);
       const name = a ? a.name : 'VĐV này';
       if (confirm(`Bạn có chắc muốn xoá vận động viên "${name}" khỏi danh sách?`)) {
@@ -1144,11 +1137,7 @@
         renderAthletes();
 
         if (isCloudReady && db) {
-          try {
-            await db.collection("athletes").doc(id).delete();
-          } catch(e) {
-            console.error("Lỗi xóa VĐV cloud:", e);
-          }
+          db.collection("athletes").doc(id).delete().catch(e => console.error("Lỗi xóa VĐV cloud:", e));
         }
       }
     }
@@ -1244,7 +1233,7 @@
       document.getElementById('viewModal').classList.remove('flex');
     }
 
-    // ==================== KHỞI CHẠY & ĐỒNG BỘ CLOUD ====================
+    // ==================== KHỞI CHẠY & REAL-TIME SYNC ====================
     function startApp() {
       renderExpenses();
       renderAthletes();
@@ -1252,7 +1241,7 @@
       if (isCloudReady && db) {
         updateCloudBadge('warning', 'Đang kết nối Cloud...');
 
-        // Đồng bộ chi phí
+        // 1. Đồng bộ bảng Chi phí
         db.collection("expenses").onSnapshot((snapshot) => {
           const cloudExp = [];
           snapshot.forEach(doc => cloudExp.push({ id: doc.id, ...doc.data() }));
@@ -1262,19 +1251,27 @@
             renderExpenses();
           }
           updateCloudBadge('success', 'Đã đồng bộ');
-        }, err => console.warn("Lỗi listener expenses:", err));
+        }, err => {
+          console.warn("Lỗi listener expenses:", err);
+          updateCloudBadge('error', 'Lỗi Cloud');
+        });
 
-        // Đồng bộ VĐV
+        // 2. Đồng bộ bảng Vận động viên
         db.collection("athletes").onSnapshot((snapshot) => {
           const cloudAth = [];
           snapshot.forEach(doc => cloudAth.push({ id: doc.id, ...doc.data() }));
+          
+          // Chỉ ghi đè danh sách khi trên Cloud thực sự có dữ liệu
           if (cloudAth.length > 0) {
             athletes = cloudAth;
             localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
             renderAthletes();
           }
           updateCloudBadge('success', 'Đã đồng bộ');
-        }, err => console.warn("Lỗi listener athletes:", err));
+        }, err => {
+          console.warn("Lỗi listener athletes:", err);
+          updateCloudBadge('error', 'Lỗi Cloud');
+        });
 
       } else {
         updateCloudBadge('warning', 'Chế độ Local');
