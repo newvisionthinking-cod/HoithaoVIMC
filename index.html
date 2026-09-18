@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Quản Lý Chi Phí Hội Thao VIMC</title>
+  <title>Quản Lý Hội Thao VIMC - Chi Phí & Vận Động Viên</title>
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Sử dụng Firebase v8.10.1 cực kỳ ổn định, tương thích 100% Web & Android APK -->
+  <!-- Firebase SDK v8.10.1 ổn định -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <!-- SheetJS xuất Excel -->
@@ -15,6 +15,7 @@
   <style>
     body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
     .tab-active { border-b-2 border-blue-600 text-blue-600 font-semibold; }
+    .nav-btn-active { background-color: #1e40af; color: #ffffff; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-20 select-none">
@@ -25,27 +26,38 @@
       <div class="flex items-center justify-between">
         <div>
           <span class="text-[10px] uppercase tracking-wider bg-blue-700 text-blue-100 px-2 py-0.5 rounded font-medium">Hội Thao VIMC</span>
-          <h1 class="text-base sm:text-xl font-bold mt-0.5">Sổ Quản Lý Chi Phí Thể Thao</h1>
+          <h1 class="text-base sm:text-xl font-bold mt-0.5">Quản Lý Đội Thể Thao & Chi Phí</h1>
         </div>
         <span id="cloudBadge" class="text-[11px] bg-amber-500/20 text-amber-200 border border-amber-400/30 px-2 py-0.5 rounded-full flex items-center gap-1 sm:hidden">
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Đang kết nối
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Cloud
         </span>
       </div>
       <div class="flex items-center gap-2">
         <span id="cloudBadgeDesktop" class="hidden sm:flex text-xs bg-blue-900/60 text-amber-200 border border-amber-500/40 px-2.5 py-1 rounded-full items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Đang kiểm tra Cloud
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Đồng bộ Cloud
         </span>
-        <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow flex items-center gap-1">
+        <button id="exportExcelBtn" onclick="exportCurrentView()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow flex items-center gap-1">
           📊 Excel
+        </button>
+      </div>
+    </div>
+
+    <!-- Thanh Điều Hướng 2 Phân Hệ Lớn -->
+    <div class="bg-blue-900/80 px-4 py-1.5 border-t border-blue-700/50">
+      <div class="max-w-5xl mx-auto flex gap-2 text-xs sm:text-sm font-medium">
+        <button onclick="switchMainTab('EXPENSES')" id="nav-btn-expenses" class="nav-btn px-3 py-1.5 rounded-lg text-blue-100 hover:text-white transition flex items-center gap-1.5 nav-btn-active">
+          <span>💰</span> Sổ Chi Tiêu & Quỹ
+        </button>
+        <button onclick="switchMainTab('ATHLETES')" id="nav-btn-athletes" class="nav-btn px-3 py-1.5 rounded-lg text-blue-100 hover:text-white transition flex items-center gap-1.5">
+          <span>🏃</span> Danh Sách VĐV (<span id="athleteCountHeader">0</span>)
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6">
-
-    <!-- KPI Cards -->
+  <!-- ==================== PHÂN HỆ 1: QUẢN LÝ CHI PHÍ ==================== -->
+  <section id="sectionExpenses" class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6">
+    <!-- KPI Summary Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
       <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
         <div>
@@ -87,7 +99,7 @@
       </div>
     </div>
 
-    <!-- Số Dư Còn Lại Banner -->
+    <!-- Banner Số Dư Còn Lại -->
     <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 sm:p-5 rounded-2xl shadow-md mb-5 flex items-center justify-between">
       <div>
         <p class="text-xs uppercase font-medium text-blue-200 tracking-wider">Số Tiền Còn Lại</p>
@@ -98,7 +110,7 @@
       </button>
     </div>
 
-    <!-- Danh Sách & Bộ Lọc -->
+    <!-- Danh Sách Chi Phí & Bộ Lọc -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="flex border-b border-slate-200 text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2 overflow-x-auto">
         <button onclick="filterCategory('ALL')" id="tab-ALL" class="tab-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap">Tất Cả</button>
@@ -107,7 +119,6 @@
         <button onclick="filterCategory('Khác')" id="tab-Khác" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">📋 Khác</button>
       </div>
 
-      <!-- Bảng Máy Tính -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-left text-sm">
           <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
@@ -126,16 +137,119 @@
         </table>
       </div>
 
-      <!-- Danh Sách Điện Thoại -->
       <div id="txListMobile" class="md:hidden divide-y divide-slate-100"></div>
 
       <div id="emptyState" class="hidden text-center py-12 text-slate-400">
         <p class="text-sm">Chưa có giao dịch nào được lưu.</p>
       </div>
     </div>
-  </main>
+  </section>
 
-  <!-- Modal Nhập / Sửa Giao Dịch -->
+  <!-- ==================== PHÂN HỆ 2: QUẢN LÝ VẬN ĐỘNG VIÊN ==================== -->
+  <section id="sectionAthletes" class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6 hidden">
+    <!-- Thống kê nhanh VĐV -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 text-center">
+        <span class="text-xs font-semibold text-slate-500 uppercase">Tổng VĐV</span>
+        <p id="statTotalAthletes" class="text-xl sm:text-2xl font-bold text-blue-700 mt-0.5">0</p>
+      </div>
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-amber-200 text-center bg-amber-50/30">
+        <span class="text-xs font-semibold text-amber-800 uppercase">⚽ Bóng Đá</span>
+        <p id="statFootballAthletes" class="text-xl sm:text-2xl font-bold text-amber-700 mt-0.5">0</p>
+      </div>
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-indigo-200 text-center bg-indigo-50/30">
+        <span class="text-xs font-semibold text-indigo-800 uppercase">🏓 Pickleball</span>
+        <p id="statPickleballAthletes" class="text-xl sm:text-2xl font-bold text-indigo-700 mt-0.5">0</p>
+      </div>
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-purple-200 text-center bg-purple-50/30">
+        <span class="text-xs font-semibold text-purple-800 uppercase">👥 Nội Dung Đôi</span>
+        <p id="statDoublesAthletes" class="text-xl sm:text-2xl font-bold text-purple-700 mt-0.5">0</p>
+      </div>
+    </div>
+
+    <!-- Banner Đăng Ký VĐV -->
+    <div class="bg-gradient-to-r from-slate-800 to-blue-900 text-white p-4 sm:p-5 rounded-2xl shadow-md mb-4 flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase font-medium text-slate-300 tracking-wider">Danh Sách Nhân Sự Thi Đấu</p>
+        <p class="text-base sm:text-xl font-bold mt-0.5">Hồ Sơ & Xác Minh VĐV</p>
+      </div>
+      <button onclick="openAthleteModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1">
+        <span>+</span> Đăng Ký VĐV
+      </button>
+    </div>
+
+    <!-- BỘ LỌC VẬN ĐỘNG VIÊN: GỒM "TẤT CẢ", "BÓNG ĐÁ", "PICKLEBALL (DROPDOWN)" -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible">
+      <div class="flex items-center border-b border-slate-200 text-xs sm:text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2">
+        
+        <!-- Nút 1: Tất Cả -->
+        <button onclick="selectAthleteFilter('ALL', 'Tất Cả')" id="tabAth-ALL" class="tabAth-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap transition">
+          Tất Cả
+        </button>
+        
+        <!-- Nút 2: Bóng Đá -->
+        <button onclick="selectAthleteFilter('Bóng đá', '⚽ Bóng Đá')" id="tabAth-Bóng đá" class="tabAth-btn py-3 px-3 sm:px-4 whitespace-nowrap transition">
+          ⚽ Bóng Đá
+        </button>
+
+        <!-- Nút 3: Pickleball dạng Dropdown -->
+        <div class="relative inline-block text-left" id="pickleballDropdownWrapper">
+          <button type="button" onclick="togglePickleballDropdown(event)" id="tabAth-Pickleball" class="tabAth-btn py-3 px-3 sm:px-4 whitespace-nowrap flex items-center gap-1.5 transition text-indigo-700 hover:text-indigo-900">
+            <span id="pickleballBtnLabel">🏓 Pickleball</span>
+            <span id="pickleballCaret" class="text-[10px] text-slate-400 transform transition-transform duration-200">▼</span>
+          </button>
+
+          <!-- Menu con xổ ra khi nhấn vào Pickleball -->
+          <div id="pickleballMenu" class="hidden absolute left-0 sm:left-auto top-full mt-1 w-48 rounded-xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 py-1.5 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100">
+            <div class="py-1">
+              <button onclick="selectAthleteFilter('Pickleball', '🏓 Tất cả Pickleball')" class="w-full text-left px-4 py-2 text-xs sm:text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2 font-medium">
+                <span>🏓</span> Tất cả Pickleball
+              </button>
+            </div>
+            <div class="py-1">
+              <button onclick="selectAthleteFilter('Đôi nam', '🎾 Đôi Nam')" class="w-full text-left px-4 py-2 text-xs sm:text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2 font-medium">
+                <span>🎾</span> Đôi Nam
+              </button>
+              <button onclick="selectAthleteFilter('Đôi nữ', '👭 Đôi Nữ')" class="w-full text-left px-4 py-2 text-xs sm:text-sm text-slate-700 hover:bg-rose-50 hover:text-rose-700 flex items-center gap-2 font-medium">
+                <span>👭</span> Đôi Nữ
+              </button>
+              <button onclick="selectAthleteFilter('Đôi nam nữ', '👫 Đôi Nam Nữ')" class="w-full text-left px-4 py-2 text-xs sm:text-sm text-slate-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 font-medium">
+                <span>👫</span> Đôi Nam Nữ
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bảng Desktop VĐV -->
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+            <tr>
+              <th class="py-3 px-4 font-semibold text-center w-12">STT</th>
+              <th class="py-3 px-4 font-semibold">Họ Và Tên</th>
+              <th class="py-3 px-4 font-semibold">Môn Thi Đấu</th>
+              <th class="py-3 px-4 font-semibold">Nội Dung Cụ Thể</th>
+              <th class="py-3 px-4 font-semibold">Năm Sinh (Tuổi)</th>
+              <th class="py-3 px-4 font-semibold">Mã Số BHXH</th>
+              <th class="py-3 px-4 font-semibold">Ghi Chú / Vị Trí</th>
+              <th class="py-3 px-4 font-semibold text-center">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="athleteTableDesktop" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+
+      <!-- Danh Sách Mobile VĐV -->
+      <div id="athleteListMobile" class="md:hidden divide-y divide-slate-100"></div>
+
+      <div id="athleteEmptyState" class="hidden text-center py-12 text-slate-400">
+        <p class="text-sm">Chưa có vận động viên nào trong danh mục này.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MODAL CHI TIÊU ==================== -->
   <div id="modalForm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col">
       <div class="px-5 py-3.5 bg-slate-100 border-b border-slate-200 flex justify-between items-center shrink-0">
@@ -209,6 +323,68 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL ĐĂNG KÝ VẬN ĐỘNG VIÊN ==================== -->
+  <div id="modalAthlete" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col">
+      <div class="px-5 py-3.5 bg-slate-100 border-b border-slate-200 flex justify-between items-center shrink-0">
+        <h3 class="font-bold text-slate-800 text-sm sm:text-base" id="athleteModalTitle">Đăng Ký Vận Động Viên</h3>
+        <button onclick="closeAthleteModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      </div>
+
+      <div class="p-4 sm:p-5 space-y-3 text-sm overflow-y-auto">
+        <input type="hidden" id="athId">
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Họ Và Tên VĐV (*)</label>
+          <input type="text" id="athName" placeholder="VD: Nguyễn Văn A" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1 text-xs">Bộ Môn (*)</label>
+            <select id="athCategory" onchange="handleSportChange()" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-xs sm:text-sm font-medium">
+              <option value="Pickleball">🏓 Pickleball</option>
+              <option value="Bóng đá">⚽ Bóng Đá</option>
+              <option value="Cả 2 môn">⚽ 🏓 Cả 2 Môn</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-medium text-slate-700 mb-1 text-xs" id="athEventLabel">Nội Dung Thi Đấu (*)</label>
+            <select id="athEvent" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-xs sm:text-sm font-semibold text-blue-800">
+              <option value="Đôi nam">🎾 Đôi Nam</option>
+              <option value="Đôi nữ">👭 Đôi Nữ</option>
+              <option value="Đôi nam nữ">👫 Đôi Nam Nữ</option>
+              <option value="Đơn nam">Đơn Nam</option>
+              <option value="Đơn nữ">Đơn Nữ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1 text-xs">Năm Sinh (*)</label>
+            <input type="number" id="athBirthYear" placeholder="VD: 1990" min="1950" max="2020" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1 text-xs">Số Sổ / Mã BHXH (*)</label>
+            <input type="text" id="athInsurance" placeholder="Mã số BHXH 10 số" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Vị Trí / Bạn Cùng Đôi / Ghi Chú</label>
+          <input type="text" id="athNotes" placeholder="VD: Đánh cặp với anh Nam; Tiền đạo; Hậu vệ..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+        </div>
+
+        <div class="pt-3 flex gap-2 border-t border-slate-200 shrink-0">
+          <button type="button" onclick="closeAthleteModal()" class="w-1/2 py-2.5 rounded-lg border border-slate-300 text-slate-600 font-medium hover:bg-slate-50">Hủy</button>
+          <button type="button" id="athSubmitBtn" onclick="saveAthleteNow()" class="w-1/2 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm transition">Lưu VĐV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Xem File -->
   <div id="viewModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white rounded-2xl max-w-xl w-full p-4 flex flex-col max-h-[90vh]">
@@ -225,22 +401,21 @@
     </div>
   </div>
 
-  <!-- SCRIPT LOGIC -->
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
   <script>
-    // 1. CẤU HÌNH THÔNG TIN DỰ ÁN FIREBASE CỦA BẠN:
+    // CẤU HÌNH FIREBASE THẬT CỦA BẠN:
     const firebaseConfig = {
-  apiKey: "AIzaSyApjuT6bCk-3B6TbwyB0JsEqdY2Bze-8Bg",
-  authDomain: "hoithaovimc.firebaseapp.com",
-  projectId: "hoithaovimc",
-  storageBucket: "hoithaovimc.firebasestorage.app",
-  messagingSenderId: "351510274467",
-  appId: "1:351510274467:web:e675ed2b843a0176133a16"
-};
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
     let db = null;
     let isCloudReady = false;
 
-    // Khởi tạo Firebase SDK v8 (Cực kỳ an toàn, không báo lỗi ngầm)
     try {
       if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
         firebase.initializeApp(firebaseConfig);
@@ -248,26 +423,51 @@
         isCloudReady = true;
       }
     } catch(err) {
-      console.warn("Chưa cấu hình Firebase hoặc lỗi khởi tạo:", err);
+      console.warn("Chưa cấu hình Firebase hoặc lỗi:", err);
     }
 
-    const STORAGE_KEY = 'HOI_THAO_VIMC_LOCAL';
-    let transactions = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    const EXPENSES_STORAGE_KEY = 'HOI_THAO_VIMC_EXPENSES';
+    const ATHLETES_STORAGE_KEY = 'HOI_THAO_VIMC_ATHLETES';
+
+    let currentMainTab = 'EXPENSES';
+    let transactions = JSON.parse(localStorage.getItem(EXPENSES_STORAGE_KEY)) || [];
+    let athletes = JSON.parse(localStorage.getItem(ATHLETES_STORAGE_KEY)) || [];
+
     let currentFilter = 'ALL';
+    let currentAthleteFilter = 'ALL';
     let currentFiles = [];
 
     const fmt = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
 
+    function switchMainTab(tab) {
+      currentMainTab = tab;
+      const secExp = document.getElementById('sectionExpenses');
+      const secAth = document.getElementById('sectionAthletes');
+      const btnExp = document.getElementById('nav-btn-expenses');
+      const btnAth = document.getElementById('nav-btn-athletes');
+
+      if (tab === 'EXPENSES') {
+        secExp.classList.remove('hidden');
+        secAth.classList.add('hidden');
+        btnExp.classList.add('nav-btn-active');
+        btnAth.classList.remove('nav-btn-active');
+      } else {
+        secExp.classList.add('hidden');
+        secAth.classList.remove('hidden');
+        btnExp.classList.remove('nav-btn-active');
+        btnAth.classList.add('nav-btn-active');
+        renderAthletes();
+      }
+    }
+
     function updateCloudBadge(status, text) {
       const badgeMobile = document.getElementById('cloudBadge');
       const badgeDesktop = document.getElementById('cloudBadgeDesktop');
-      
       const colors = {
         success: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
         warning: 'bg-amber-500/20 text-amber-200 border-amber-400/30',
         error: 'bg-rose-500/20 text-rose-200 border-rose-400/30'
       };
-
       const dotColors = {
         success: 'bg-emerald-400',
         warning: 'bg-amber-400',
@@ -284,6 +484,7 @@
       }
     }
 
+    // ==================== PHẦN CHI PHÍ ====================
     function toggleExpenseBreakdown() {
       const breakdown = document.getElementById('expenseBreakdown');
       const chevron = document.getElementById('expenseChevron');
@@ -324,7 +525,7 @@
       remEl.className = remaining < 0 ? 'text-2xl sm:text-3xl font-extrabold mt-0.5 text-rose-300' : 'text-2xl sm:text-3xl font-extrabold mt-0.5 text-white';
     }
 
-    function render() {
+    function renderExpenses() {
       calculateSummary();
       const tbodyDesktop = document.getElementById('txTableDesktop');
       const listMobile = document.getElementById('txListMobile');
@@ -365,7 +566,6 @@
             </div>`
           : `<span class="text-slate-300 text-xs italic">Không có</span>`;
 
-        // Dòng Desktop
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/70 transition';
         tr.innerHTML = `
@@ -387,7 +587,6 @@
         `;
         tbodyDesktop.appendChild(tr);
 
-        // Thẻ Mobile
         const card = document.createElement('div');
         card.className = 'p-3.5 flex flex-col gap-2 hover:bg-slate-50';
         card.innerHTML = `
@@ -426,7 +625,7 @@
       currentFilter = cat;
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
       document.getElementById(`tab-${cat}`).classList.add('tab-active');
-      render();
+      renderExpenses();
     }
 
     function openModal() {
@@ -475,7 +674,7 @@
       return new Promise((resolve) => {
         if (!file.type.startsWith('image/')) {
           if (file.size > 800 * 1024) {
-            alert(`File "${file.name}" quá lớn (>800KB). Vui lòng chọn file nhẹ hơn!`);
+            alert(`File "${file.name}" quá lớn (>800KB).`);
             return resolve(null);
           }
           const reader = new FileReader();
@@ -528,9 +727,7 @@
 
       for (let file of filesToAdd) {
         const processed = await compressImage(file);
-        if (processed) {
-          currentFiles.push(processed);
-        }
+        if (processed) currentFiles.push(processed);
       }
 
       submitBtn.disabled = false;
@@ -564,9 +761,6 @@
       });
     }
 
-    // ==========================================
-    // HÀM LƯU DỮ LIỆU ĐƯỢC GỌI TRỰC TIẾP TỪ NÚT BẤM (CHẮC CHẮN 100% PHẢN HỒI)
-    // ==========================================
     async function saveDataNow() {
       const editId = document.getElementById('txId').value;
       const date = document.getElementById('txDate').value;
@@ -576,67 +770,34 @@
       const type = document.getElementById('txType').value;
       const category = document.getElementById('txCategory').value;
 
-      // Kiểm tra nhập liệu rõ ràng
-      if (!date) {
-        alert("Vui lòng chọn ngày giao dịch!");
+      if (!date || !person || !description || !amount || amount <= 0) {
+        alert("Vui lòng điền đầy đủ: Ngày, người nhận, nội dung và số tiền (>0đ)!");
         return;
       }
-      if (!person) {
-        alert("Vui lòng điền người nhận / chi cho ai!");
-        return;
-      }
-      if (!description) {
-        alert("Vui lòng điền nội dung chi tiêu!");
-        return;
-      }
-      if (!amount || amount <= 0) {
-        alert("Vui lòng nhập số tiền hợp lệ (> 0 đ)!");
-        return;
-      }
-
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Đang lưu...';
 
       const txItem = {
         id: editId || Date.now().toString(),
-        type,
-        category,
-        date,
-        person,
-        description,
-        amount,
+        type, category, date, person, description, amount,
         files: currentFiles || []
       };
 
-      // 1. Luôn lưu ngay vào LocalStorage để màn hình nhảy số tức thì
       if (editId) {
         const idx = transactions.findIndex(t => t.id === editId);
         if (idx !== -1) transactions[idx] = txItem;
       } else {
         transactions.unshift(txItem);
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
-      render();
+      localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(transactions));
+      renderExpenses();
       closeModal();
-      submitBtn.disabled = false;
 
-      // 2. Đồng bộ ngầm lên Cloud Firestore
       if (isCloudReady && db) {
         try {
-          if (editId) {
-            await db.collection("expenses").doc(editId).set(txItem, { merge: true });
-          } else {
-            await db.collection("expenses").doc(txItem.id).set(txItem);
-          }
+          await db.collection("expenses").doc(txItem.id).set(txItem);
           updateCloudBadge('success', 'Đã đồng bộ');
         } catch(err) {
-          console.error("Lỗi đồng bộ Cloud:", err);
-          updateCloudBadge('error', 'Chưa sync Cloud');
-          alert("Dữ liệu đã lưu trên máy, nhưng chưa thể đẩy lên Firebase do: " + (err.message || "Kiểm tra Rules"));
+          console.error("Lỗi sync Cloud chi phí:", err);
         }
-      } else {
-        updateCloudBadge('warning', 'Chế độ Offline');
       }
     }
 
@@ -645,19 +806,381 @@
       const desc = item ? item.description : 'mục này';
       if (confirm(`Bạn có chắc muốn xoá khoản "${desc}"?`)) {
         transactions = transactions.filter(t => t.id !== id);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
-        render();
+        localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(transactions));
+        renderExpenses();
 
         if (isCloudReady && db) {
           try {
             await db.collection("expenses").doc(id).delete();
           } catch(e) {
-            console.error("Lỗi xóa trên cloud:", e);
+            console.error("Lỗi xóa cloud:", e);
           }
         }
       }
     }
 
+    // ==================== PHẦN VẬN ĐỘNG VIÊN & DROPDOWN MỚI ====================
+    function togglePickleballDropdown(e) {
+      e.stopPropagation();
+      const menu = document.getElementById('pickleballMenu');
+      const caret = document.getElementById('pickleballCaret');
+      const isHidden = menu.classList.contains('hidden');
+
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        caret.style.transform = 'rotate(180deg)';
+      } else {
+        menu.classList.add('hidden');
+        caret.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    // Tự động đóng dropdown khi bấm ra ngoài
+    document.addEventListener('click', function(event) {
+      const dropdownWrapper = document.getElementById('pickleballDropdownWrapper');
+      const menu = document.getElementById('pickleballMenu');
+      const caret = document.getElementById('pickleballCaret');
+      if (dropdownWrapper && !dropdownWrapper.contains(event.target)) {
+        if (menu && !menu.classList.contains('hidden')) {
+          menu.classList.add('hidden');
+          if (caret) caret.style.transform = 'rotate(0deg)';
+        }
+      }
+    });
+
+    function selectAthleteFilter(filterKey, displayLabel) {
+      currentAthleteFilter = filterKey;
+
+      // Đóng dropdown menu
+      const menu = document.getElementById('pickleballMenu');
+      const caret = document.getElementById('pickleballCaret');
+      if (menu) menu.classList.add('hidden');
+      if (caret) caret.style.transform = 'rotate(0deg)';
+
+      // Cập nhật trạng thái active tab
+      document.querySelectorAll('.tabAth-btn').forEach(b => b.classList.remove('tab-active'));
+
+      const pbLabel = document.getElementById('pickleballBtnLabel');
+      const pbTab = document.getElementById('tabAth-Pickleball');
+
+      if (filterKey === 'ALL') {
+        document.getElementById('tabAth-ALL').classList.add('tab-active');
+        pbLabel.textContent = '🏓 Pickleball';
+      } else if (filterKey === 'Bóng đá') {
+        document.getElementById('tabAth-Bóng đá').classList.add('tab-active');
+        pbLabel.textContent = '🏓 Pickleball';
+      } else {
+        // Thuộc Pickleball hoặc các nội dung đôi của Pickleball
+        pbTab.classList.add('tab-active');
+        if (filterKey === 'Pickleball') {
+          pbLabel.textContent = '🏓 Pickleball (Tất cả)';
+        } else {
+          pbLabel.textContent = `🏓 ${displayLabel}`;
+        }
+      }
+
+      renderAthletes();
+    }
+
+    function handleSportChange() {
+      const sport = document.getElementById('athCategory').value;
+      const eventSelect = document.getElementById('athEvent');
+      const eventLabel = document.getElementById('athEventLabel');
+
+      eventSelect.innerHTML = '';
+
+      if (sport === 'Bóng đá') {
+        eventLabel.textContent = 'Vị Trí Thi Đấu (*)';
+        eventSelect.innerHTML = `
+          <option value="Đội hình chính">⚽ Cầu thủ thi đấu</option>
+          <option value="Thủ môn">🧤 Thủ môn</option>
+          <option value="Dự bị">Dự bị</option>
+        `;
+      } else {
+        eventLabel.textContent = 'Nội Dung Pickleball (*)';
+        eventSelect.innerHTML = `
+          <option value="Đôi nam">🎾 Đôi Nam</option>
+          <option value="Đôi nữ">👭 Đôi Nữ</option>
+          <option value="Đôi nam nữ">👫 Đôi Nam Nữ</option>
+          <option value="Đơn nam">Đơn Nam</option>
+          <option value="Đơn nữ">Đơn Nữ</option>
+        `;
+      }
+    }
+
+    function renderAthletes() {
+      const tbody = document.getElementById('athleteTableDesktop');
+      const mobileList = document.getElementById('athleteListMobile');
+      const emptyState = document.getElementById('athleteEmptyState');
+
+      let total = athletes.length;
+      let fbCount = 0;
+      let pbCount = 0;
+      let doublesCount = 0;
+
+      athletes.forEach(a => {
+        if (a.category === 'Bóng đá' || a.category === 'Cả 2 môn') fbCount++;
+        if (a.category === 'Pickleball' || a.category === 'Cả 2 môn') {
+          pbCount++;
+          if (a.event === 'Đôi nam' || a.event === 'Đôi nam nữ' || a.event === 'Đôi nữ') {
+            doublesCount++;
+          }
+        }
+      });
+
+      document.getElementById('statTotalAthletes').textContent = total;
+      document.getElementById('statFootballAthletes').textContent = fbCount;
+      document.getElementById('statPickleballAthletes').textContent = pbCount;
+      document.getElementById('statDoublesAthletes').textContent = doublesCount;
+      document.getElementById('athleteCountHeader').textContent = total;
+
+      const filtered = athletes.filter(a => {
+        if (currentAthleteFilter === 'ALL') return true;
+        if (currentAthleteFilter === 'Bóng đá') return a.category === 'Bóng đá' || a.category === 'Cả 2 môn';
+        if (currentAthleteFilter === 'Pickleball') return a.category === 'Pickleball' || a.category === 'Cả 2 môn';
+        if (currentAthleteFilter === 'Đôi nam') return a.event === 'Đôi nam';
+        if (currentAthleteFilter === 'Đôi nữ') return a.event === 'Đôi nữ';
+        if (currentAthleteFilter === 'Đôi nam nữ') return a.event === 'Đôi nam nữ';
+        return true;
+      });
+
+      tbody.innerHTML = '';
+      mobileList.innerHTML = '';
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      const currentYear = new Date().getFullYear();
+
+      filtered.forEach((ath, idx) => {
+        const age = ath.birthYear ? (currentYear - Number(ath.birthYear)) : '-';
+        const catBadge = ath.category === 'Bóng đá' 
+          ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">⚽ Bóng Đá</span>'
+          : ath.category === 'Pickleball'
+          ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">🏓 Pickleball</span>'
+          : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">⚽ 🏓 Cả 2 môn</span>';
+
+        let eventBadge = `<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">${ath.event || 'Tiêu chuẩn'}</span>`;
+        if (ath.event === 'Đôi nam') {
+          eventBadge = '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">🎾 Đôi Nam</span>';
+        } else if (ath.event === 'Đôi nữ') {
+          eventBadge = '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">👭 Đôi Nữ</span>';
+        } else if (ath.event === 'Đôi nam nữ') {
+          eventBadge = '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">👫 Đôi Nam Nữ</span>';
+        }
+
+        // Desktop Row
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 text-center font-mono text-xs text-slate-400">${idx + 1}</td>
+          <td class="py-3 px-4 font-bold text-slate-800">${ath.name}</td>
+          <td class="py-3 px-4">${catBadge}</td>
+          <td class="py-3 px-4">${eventBadge}</td>
+          <td class="py-3 px-4 text-slate-700 font-medium">${ath.birthYear} <span class="text-xs text-slate-400">(${age} tuổi)</span></td>
+          <td class="py-3 px-4 font-mono font-semibold text-blue-700">${ath.insurance || '-'}</td>
+          <td class="py-3 px-4 text-slate-600 text-xs">${ath.notes || '-'}</td>
+          <td class="py-3 px-4 text-center">
+            <div class="flex items-center justify-center gap-1.5">
+              <button onclick="editAthlete('${ath.id}')" class="text-blue-600 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50">✏️ Sửa</button>
+              <button onclick="deleteAthlete('${ath.id}')" class="text-rose-600 font-medium text-xs px-2 py-1 rounded hover:bg-rose-50">🗑️ Xoá</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+
+        // Mobile Card
+        const card = document.createElement('div');
+        card.className = 'p-3.5 flex flex-col gap-1.5 hover:bg-slate-50';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-sm text-slate-900">${ath.name}</span>
+            <div class="flex items-center gap-1">
+              ${catBadge}
+            </div>
+          </div>
+          <div class="flex items-center gap-2 mt-0.5">
+            <span class="text-xs text-slate-400">Nội dung:</span>
+            ${eventBadge}
+          </div>
+          <div class="text-xs text-slate-600 space-y-0.5 mt-0.5">
+            <p><span class="text-slate-400">Năm sinh:</span> <span class="font-semibold text-slate-800">${ath.birthYear}</span> (${age} tuổi)</p>
+            <p><span class="text-slate-400">Số BHXH:</span> <span class="font-mono font-bold text-blue-700">${ath.insurance || 'Chưa có'}</span></p>
+            ${ath.notes ? `<p><span class="text-slate-400">Ghi chú:</span> ${ath.notes}</p>` : ''}
+          </div>
+          <div class="flex justify-end gap-3 pt-2 border-t border-slate-100 mt-1">
+            <button onclick="editAthlete('${ath.id}')" class="text-xs text-blue-600 font-medium">✏️ Sửa</button>
+            <span class="text-slate-300">|</span>
+            <button onclick="deleteAthlete('${ath.id}')" class="text-xs text-rose-600 font-medium">🗑️ Xoá</button>
+          </div>
+        `;
+        mobileList.appendChild(card);
+      });
+    }
+
+    function openAthleteModal() {
+      document.getElementById('athId').value = '';
+      document.getElementById('athName').value = '';
+      document.getElementById('athCategory').value = 'Pickleball';
+      handleSportChange();
+      document.getElementById('athEvent').value = 'Đôi nam';
+      document.getElementById('athBirthYear').value = '';
+      document.getElementById('athInsurance').value = '';
+      document.getElementById('athNotes').value = '';
+      document.getElementById('athleteModalTitle').textContent = 'Đăng Ký Vận Động Viên';
+      document.getElementById('athSubmitBtn').textContent = 'Lưu VĐV';
+      document.getElementById('modalAthlete').classList.remove('hidden');
+      document.getElementById('modalAthlete').classList.add('flex');
+    }
+
+    function closeAthleteModal() {
+      document.getElementById('modalAthlete').classList.add('hidden');
+      document.getElementById('modalAthlete').classList.remove('flex');
+    }
+
+    function editAthlete(id) {
+      const a = athletes.find(item => item.id === id);
+      if (!a) return;
+
+      document.getElementById('athId').value = a.id;
+      document.getElementById('athName').value = a.name;
+      document.getElementById('athCategory').value = a.category;
+      handleSportChange();
+      document.getElementById('athEvent').value = a.event || 'Đôi nam';
+      document.getElementById('athBirthYear').value = a.birthYear;
+      document.getElementById('athInsurance').value = a.insurance || '';
+      document.getElementById('athNotes').value = a.notes || '';
+
+      document.getElementById('athleteModalTitle').textContent = 'Chỉnh Sửa Hồ Sơ VĐV';
+      document.getElementById('athSubmitBtn').textContent = 'Cập Nhật';
+      document.getElementById('modalAthlete').classList.remove('hidden');
+      document.getElementById('modalAthlete').classList.add('flex');
+    }
+
+    async function saveAthleteNow() {
+      const editId = document.getElementById('athId').value;
+      const name = document.getElementById('athName').value.trim();
+      const category = document.getElementById('athCategory').value;
+      const event = document.getElementById('athEvent').value;
+      const birthYear = document.getElementById('athBirthYear').value.trim();
+      const insurance = document.getElementById('athInsurance').value.trim();
+      const notes = document.getElementById('athNotes').value.trim();
+
+      if (!name) {
+        alert("Vui lòng nhập Họ và Tên vận động viên!");
+        return;
+      }
+      if (!birthYear) {
+        alert("Vui lòng nhập Năm sinh của VĐV!");
+        return;
+      }
+      if (!insurance) {
+        alert("Vui lòng nhập Mã số BHXH để xác minh tư cách thi đấu!");
+        return;
+      }
+
+      const athItem = {
+        id: editId || Date.now().toString(),
+        name, category, event, birthYear, insurance, notes
+      };
+
+      if (editId) {
+        const idx = athletes.findIndex(a => a.id === editId);
+        if (idx !== -1) athletes[idx] = athItem;
+      } else {
+        athletes.push(athItem);
+      }
+
+      localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
+      renderAthletes();
+      closeAthleteModal();
+
+      if (isCloudReady && db) {
+        try {
+          await db.collection("athletes").doc(athItem.id).set(athItem);
+          updateCloudBadge('success', 'Đã đồng bộ');
+        } catch(err) {
+          console.error("Lỗi sync Cloud VĐV:", err);
+        }
+      }
+    }
+
+    async function deleteAthlete(id) {
+      const a = athletes.find(item => item.id === id);
+      const name = a ? a.name : 'VĐV này';
+      if (confirm(`Bạn có chắc muốn xoá vận động viên "${name}" khỏi danh sách?`)) {
+        athletes = athletes.filter(item => item.id !== id);
+        localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
+        renderAthletes();
+
+        if (isCloudReady && db) {
+          try {
+            await db.collection("athletes").doc(id).delete();
+          } catch(e) {
+            console.error("Lỗi xóa VĐV cloud:", e);
+          }
+        }
+      }
+    }
+
+    // ==================== XUẤT EXCEL ====================
+    function exportCurrentView() {
+      if (currentMainTab === 'EXPENSES') {
+        exportExpensesExcel();
+      } else {
+        exportAthletesExcel();
+      }
+    }
+
+    function exportExpensesExcel() {
+      if (transactions.length === 0) {
+        alert('Chưa có dữ liệu chi tiêu để xuất file!');
+        return;
+      }
+      const rows = transactions.map((t, idx) => ({
+        'STT': idx + 1,
+        'Ngày': t.date,
+        'Nghiệp Vụ': t.type === 'ADVANCE' ? 'Tạm ứng' : 'Khoản chi',
+        'Bộ Môn': t.category,
+        'Chi Cho Ai': t.person,
+        'Nội Dung': t.description,
+        'Số Tiền (VNĐ)': t.amount,
+        'Số lượng chứng từ': (t.files && t.files.length) ? t.files.length : 0
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Chi_Phi");
+      XLSX.writeFile(wb, `Bao_Cao_Chi_Phi_Hoi_Thao_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function exportAthletesExcel() {
+      if (athletes.length === 0) {
+        alert('Chưa có dữ liệu vận động viên để xuất!');
+        return;
+      }
+      const currentYear = new Date().getFullYear();
+      const rows = athletes.map((a, idx) => ({
+        'STT': idx + 1,
+        'Họ Và Tên': a.name,
+        'Môn Tham Gia': a.category,
+        'Nội Dung Thi Đấu': a.event || '',
+        'Năm Sinh': a.birthYear,
+        'Tuổi': a.birthYear ? (currentYear - Number(a.birthYear)) : '',
+        'Mã Số BHXH': a.insurance,
+        'Bạn Cặp / Ghi Chú': a.notes || ''
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Danh_Sach_VDV");
+      XLSX.writeFile(wb, `Danh_Sach_VDV_Hoi_Thao_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    // ==================== XEM CHỨNG TỪ ====================
     function previewFile(txId, idx) {
       const tx = transactions.find(t => t.id === txId);
       if (!tx || !tx.files || !tx.files[idx]) return;
@@ -691,49 +1214,38 @@
       document.getElementById('viewModal').classList.remove('flex');
     }
 
-    function exportToExcel() {
-      if (transactions.length === 0) {
-        alert('Chưa có dữ liệu để xuất file!');
-        return;
-      }
-      const rows = transactions.map((t, idx) => ({
-        'STT': idx + 1,
-        'Ngày': t.date,
-        'Nghiệp Vụ': t.type === 'ADVANCE' ? 'Tạm ứng' : 'Khoản chi',
-        'Bộ Môn': t.category,
-        'Chi Cho Ai': t.person,
-        'Nội Dung': t.description,
-        'Số Tiền (VNĐ)': t.amount,
-        'Số lượng chứng từ': (t.files && t.files.length) ? t.files.length : 0
-      }));
-
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Chi_Phi_Hoi_Thao");
-      XLSX.writeFile(wb, `Bao_Cao_Chi_Phi_${new Date().toISOString().slice(0,10)}.xlsx`);
-    }
-
-    // Kết nối Firebase Realtime Listener
+    // ==================== KHỞI CHẠY & ĐỒNG BỘ CLOUD ====================
     function startApp() {
-      render();
+      renderExpenses();
+      renderAthletes();
 
       if (isCloudReady && db) {
         updateCloudBadge('warning', 'Đang kết nối Cloud...');
+
+        // Đồng bộ chi phí
         db.collection("expenses").onSnapshot((snapshot) => {
-          const cloudData = [];
-          snapshot.forEach((doc) => {
-            cloudData.push({ id: doc.id, ...doc.data() });
-          });
-          if (cloudData.length > 0) {
-            transactions = cloudData;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
-            render();
+          const cloudExp = [];
+          snapshot.forEach(doc => cloudExp.push({ id: doc.id, ...doc.data() }));
+          if (cloudExp.length > 0) {
+            transactions = cloudExp;
+            localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(transactions));
+            renderExpenses();
           }
           updateCloudBadge('success', 'Đã đồng bộ');
-        }, (err) => {
-          console.warn("Lỗi listener Firestore:", err);
-          updateCloudBadge('error', 'Lỗi Cloud Rules');
-        });
+        }, err => console.warn("Lỗi listener expenses:", err));
+
+        // Đồng bộ VĐV
+        db.collection("athletes").onSnapshot((snapshot) => {
+          const cloudAth = [];
+          snapshot.forEach(doc => cloudAth.push({ id: doc.id, ...doc.data() }));
+          if (cloudAth.length > 0) {
+            athletes = cloudAth;
+            localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
+            renderAthletes();
+          }
+          updateCloudBadge('success', 'Đã đồng bộ');
+        }, err => console.warn("Lỗi listener athletes:", err));
+
       } else {
         updateCloudBadge('warning', 'Chế độ Local');
       }
