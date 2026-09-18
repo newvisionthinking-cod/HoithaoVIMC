@@ -49,7 +49,7 @@
           <span>💰</span> Sổ Chi Tiêu & Quỹ
         </button>
         <button onclick="switchMainTab('ATHLETES')" id="nav-btn-athletes" class="nav-btn px-3 py-1.5 rounded-lg text-blue-100 hover:text-white transition flex items-center gap-1.5">
-          <span>🏃</span> Danh Sách VĐV (<span id="athleteCountHeader">0</span>)
+          <span>🏃</span> Danh Sách VĐV (<span id="athleteCountHeader">0</span> người)
         </button>
       </div>
     </div>
@@ -147,56 +147,54 @@
 
   <!-- ==================== PHÂN HỆ 2: QUẢN LÝ VẬN ĐỘNG VIÊN ==================== -->
   <section id="sectionAthletes" class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6 hidden">
-   <!-- Thống kê nhanh VĐV (3 thẻ cân đối) -->
-<div class="grid grid-cols-3 gap-2.5 sm:gap-3 mb-4">
-  <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 text-center">
-    <span class="text-xs font-semibold text-slate-500 uppercase">Tổng VĐV</span>
-    <p id="statTotalAthletes" class="text-xl sm:text-2xl font-bold text-blue-700 mt-0.5">0</p>
-  </div>
-  <div class="bg-white p-3.5 rounded-xl shadow-sm border border-amber-200 text-center bg-amber-50/30">
-    <span class="text-xs font-semibold text-amber-800 uppercase">⚽ Bóng Đá</span>
-    <p id="statFootballAthletes" class="text-xl sm:text-2xl font-bold text-amber-700 mt-0.5">0</p>
-  </div>
-  <div class="bg-white p-3.5 rounded-xl shadow-sm border border-indigo-200 text-center bg-indigo-50/30">
-    <span class="text-xs font-semibold text-indigo-800 uppercase">🏓 Pickleball</span>
-    <p id="statPickleballAthletes" class="text-xl sm:text-2xl font-bold text-indigo-700 mt-0.5">0</p>
-  </div>
-</div>
+    <!-- 3 Thẻ Thống Kê Cân Đối (Khử Trùng Lặp Chuẩn Xác Theo BHXH) -->
+    <div class="grid grid-cols-3 gap-2.5 sm:gap-3 mb-4">
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 text-center">
+        <span class="text-xs font-semibold text-slate-500 uppercase">Tổng VĐV</span>
+        <p id="statTotalAthletes" class="text-xl sm:text-2xl font-bold text-blue-700 mt-0.5">0</p>
+        <span class="text-[10px] text-slate-400">người (theo BHXH)</span>
+      </div>
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-amber-200 text-center bg-amber-50/30">
+        <span class="text-xs font-semibold text-amber-800 uppercase">⚽ Bóng Đá</span>
+        <p id="statFootballAthletes" class="text-xl sm:text-2xl font-bold text-amber-700 mt-0.5">0</p>
+        <span class="text-[10px] text-amber-600/70">người</span>
+      </div>
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-indigo-200 text-center bg-indigo-50/30">
+        <span class="text-xs font-semibold text-indigo-800 uppercase">🏓 Pickleball</span>
+        <p id="statPickleballAthletes" class="text-xl sm:text-2xl font-bold text-indigo-700 mt-0.5">0</p>
+        <span class="text-[10px] text-indigo-600/70">người duy nhất</span>
+      </div>
+    </div>
 
     <!-- Banner Đăng Ký VĐV -->
     <div class="bg-gradient-to-r from-slate-800 to-blue-900 text-white p-4 sm:p-5 rounded-2xl shadow-md mb-4 flex items-center justify-between">
       <div>
         <p class="text-xs uppercase font-medium text-slate-300 tracking-wider">Danh Sách Nhân Sự Thi Đấu</p>
-        <p class="text-base sm:text-xl font-bold mt-0.5">Hồ Sơ & Xác Minh VĐV</p>
+        <p class="text-base sm:text-xl font-bold mt-0.5">Hồ Sơ & Phân Cặp Thi Đấu</p>
       </div>
       <button onclick="openAthleteModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1">
         <span>+</span> Đăng Ký VĐV
       </button>
     </div>
 
-    <!-- BỘ LỌC VẬN ĐỘNG VIÊN: GỒM "TẤT CẢ", "BÓNG ĐÁ", "PICKLEBALL (DROPDOWN)" -->
+    <!-- Bộ Lọc Danh Mục VĐV Gọn Gàng: Tất Cả, Bóng Đá, Pickleball (Dropdown) -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible">
       <div class="flex items-center border-b border-slate-200 text-xs sm:text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2">
-        
-        <!-- Nút 1: Tất Cả -->
         <button onclick="selectAthleteFilter('ALL', 'Tất Cả')" id="tabAth-ALL" class="tabAth-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap transition">
           Tất Cả
         </button>
-        
-        <!-- Nút 2: Bóng Đá -->
         <button onclick="selectAthleteFilter('Bóng đá', '⚽ Bóng Đá')" id="tabAth-Bóng đá" class="tabAth-btn py-3 px-3 sm:px-4 whitespace-nowrap transition">
           ⚽ Bóng Đá
         </button>
 
-        <!-- Nút 3: Pickleball dạng Dropdown -->
+        <!-- Menu xổ xuống cho Pickleball -->
         <div class="relative inline-block text-left" id="pickleballDropdownWrapper">
           <button type="button" onclick="togglePickleballDropdown(event)" id="tabAth-Pickleball" class="tabAth-btn py-3 px-3 sm:px-4 whitespace-nowrap flex items-center gap-1.5 transition text-indigo-700 hover:text-indigo-900">
             <span id="pickleballBtnLabel">🏓 Pickleball</span>
             <span id="pickleballCaret" class="text-[10px] text-slate-400 transform transition-transform duration-200">▼</span>
           </button>
 
-          <!-- Menu con xổ ra khi nhấn vào Pickleball -->
-          <div id="pickleballMenu" class="hidden absolute left-0 sm:left-auto top-full mt-1 w-48 rounded-xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 py-1.5 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100">
+          <div id="pickleballMenu" class="hidden absolute left-0 sm:left-auto top-full mt-1 w-52 rounded-xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 py-1.5 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100">
             <div class="py-1">
               <button onclick="selectAthleteFilter('Pickleball', '🏓 Tất cả Pickleball')" class="w-full text-left px-4 py-2 text-xs sm:text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2 font-medium">
                 <span>🏓</span> Tất cả Pickleball
@@ -225,10 +223,10 @@
               <th class="py-3 px-4 font-semibold text-center w-12">STT</th>
               <th class="py-3 px-4 font-semibold">Họ Và Tên</th>
               <th class="py-3 px-4 font-semibold">Môn Thi Đấu</th>
-              <th class="py-3 px-4 font-semibold">Nội Dung Cụ Thể</th>
+              <th class="py-3 px-4 font-semibold">Nội Dung Tham Gia</th>
               <th class="py-3 px-4 font-semibold">Năm Sinh (Tuổi)</th>
               <th class="py-3 px-4 font-semibold">Mã Số BHXH</th>
-              <th class="py-3 px-4 font-semibold">Ghi Chú / Vị Trí</th>
+              <th class="py-3 px-4 font-semibold">Ghi Chú / Vị Trí / Bạn Đôi</th>
               <th class="py-3 px-4 font-semibold text-center">Thao Tác</th>
             </tr>
           </thead>
@@ -319,7 +317,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL ĐĂNG KÝ VẬN ĐỘNG VIÊN ==================== -->
+  <!-- ==================== MODAL VẬN ĐỘNG VIÊN: ĐA CHỌN NỘI DUNG ==================== -->
   <div id="modalAthlete" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col">
       <div class="px-5 py-3.5 bg-slate-100 border-b border-slate-200 flex justify-between items-center shrink-0">
@@ -335,25 +333,39 @@
           <input type="text" id="athName" placeholder="VD: Nguyễn Văn A" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold">
         </div>
 
-        <div class="grid grid-cols-2 gap-2.5">
-          <div>
-            <label class="block font-medium text-slate-700 mb-1 text-xs">Bộ Môn (*)</label>
-            <select id="athCategory" onchange="handleSportChange()" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-xs sm:text-sm font-medium">
-              <option value="Pickleball">🏓 Pickleball</option>
-              <option value="Bóng đá">⚽ Bóng Đá</option>
-              <option value="Cả 2 môn">⚽ 🏓 Cả 2 Môn</option>
-            </select>
-          </div>
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Bộ Môn Thi Đấu (*)</label>
+          <select id="athCategory" onchange="handleSportChange()" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-xs sm:text-sm font-medium">
+            <option value="Pickleball">🏓 Pickleball</option>
+            <option value="Bóng đá">⚽ Bóng Đá</option>
+            <option value="Cả 2 môn">⚽ 🏓 Cả 2 Môn (Bóng đá & Pickleball)</option>
+          </select>
+        </div>
 
-          <div>
-            <label class="block font-medium text-slate-700 mb-1 text-xs" id="athEventLabel">Nội Dung Thi Đấu (*)</label>
-            <select id="athEvent" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-xs sm:text-sm font-semibold text-blue-800">
-              <option value="Đôi nam">🎾 Đôi Nam</option>
-              <option value="Đôi nữ">👭 Đôi Nữ</option>
-              <option value="Đôi nam nữ">👫 Đôi Nam Nữ</option>
-              <option value="Đơn nam">Đơn Nam</option>
-              <option value="Đơn nữ">Đơn Nữ</option>
-            </select>
+        <!-- Khung chọn nhiều nội dung Pickleball cùng lúc -->
+        <div id="pickleballEventsBox" class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2">
+          <label class="block font-semibold text-indigo-900 text-xs">Nội dung Pickleball (Tích chọn nhiều nội dung):</label>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label class="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-blue-400">
+              <input type="checkbox" name="pbEvent" value="Đôi nam" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+              <span class="font-medium text-slate-700">🎾 Đôi Nam</span>
+            </label>
+            <label class="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-purple-400">
+              <input type="checkbox" name="pbEvent" value="Đôi nam nữ" class="rounded text-purple-600 focus:ring-purple-500 w-4 h-4">
+              <span class="font-medium text-slate-700">👫 Đôi Nam Nữ</span>
+            </label>
+            <label class="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-rose-400">
+              <input type="checkbox" name="pbEvent" value="Đôi nữ" class="rounded text-rose-600 focus:ring-rose-500 w-4 h-4">
+              <span class="font-medium text-slate-700">👭 Đôi Nữ</span>
+            </label>
+            <label class="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-slate-400">
+              <input type="checkbox" name="pbEvent" value="Đơn nam" class="rounded text-slate-600 focus:ring-slate-500 w-4 h-4">
+              <span class="font-medium text-slate-700">Đơn Nam</span>
+            </label>
+            <label class="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-slate-400">
+              <input type="checkbox" name="pbEvent" value="Đơn nữ" class="rounded text-slate-600 focus:ring-slate-500 w-4 h-4">
+              <span class="font-medium text-slate-700">Đơn Nữ</span>
+            </label>
           </div>
         </div>
 
@@ -363,14 +375,14 @@
             <input type="number" id="athBirthYear" placeholder="VD: 1990" min="1950" max="2020" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
           </div>
           <div>
-            <label class="block font-medium text-slate-700 mb-1 text-xs">Số Sổ / Mã BHXH (*)</label>
+            <label class="block font-medium text-slate-700 mb-1 text-xs">Số Mã BHXH (*) (Duy nhất)</label>
             <input type="text" id="athInsurance" placeholder="Mã số BHXH 10 số" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm font-mono">
           </div>
         </div>
 
         <div>
-          <label class="block font-medium text-slate-700 mb-1 text-xs">Vị Trí / Bạn Cùng Đôi / Ghi Chú</label>
-          <input type="text" id="athNotes" placeholder="VD: Đánh cặp với anh Nam; Tiền đạo; Hậu vệ..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Ghi Chú / Vị Trí / Bạn Cùng Đôi</label>
+          <input type="text" id="athNotes" placeholder="VD: Đôi nam cặp với anh B; Đôi nam nữ cặp với chị C..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
         </div>
 
         <div class="pt-3 flex gap-2 border-t border-slate-200 shrink-0">
@@ -399,16 +411,15 @@
 
   <!-- ==================== JAVASCRIPT LOGIC ==================== -->
   <script>
-    // CẤU HÌNH FIREBASE THẬT CỦA BẠN:
-  const firebaseConfig = {
-  apiKey: "AIzaSyApjuT6bCk-3B6TbwyB0JsEqdY2Bze-8Bg",
-  authDomain: "hoithaovimc.firebaseapp.com",
-  projectId: "hoithaovimc",
-  storageBucket: "hoithaovimc.firebasestorage.app",
-  messagingSenderId: "351510274467",
-  appId: "1:351510274467:web:e675ed2b843a0176133a16"
-};
-
+    // THÔNG TIN FIREBASE THẬT CỦA BẠN (ĐÃ ĐIỀN CHUẨN XÁC)
+    const firebaseConfig = {
+      apiKey: "AIzaSyApjuT6bCk-3B6TbwyB0JsEqdY2Bze-8Bg",
+      authDomain: "hoithaovimc.firebaseapp.com",
+      projectId: "hoithaovimc",
+      storageBucket: "hoithaovimc.firebasestorage.app",
+      messagingSenderId: "351510274467",
+      appId: "1:351510274467:web:e675ed2b843a0176133a16"
+    };
 
     let db = null;
     let isCloudReady = false;
@@ -816,7 +827,7 @@
       }
     }
 
-    // ==================== PHẦN VẬN ĐỘNG VIÊN & DROPDOWN MỚI ====================
+    // ==================== PHẦN VẬN ĐỘNG VIÊN: LỌC TRÙNG THEO BHXH ====================
     function togglePickleballDropdown(e) {
       e.stopPropagation();
       const menu = document.getElementById('pickleballMenu');
@@ -832,7 +843,6 @@
       }
     }
 
-    // Tự động đóng dropdown khi bấm ra ngoài
     document.addEventListener('click', function(event) {
       const dropdownWrapper = document.getElementById('pickleballDropdownWrapper');
       const menu = document.getElementById('pickleballMenu');
@@ -848,13 +858,11 @@
     function selectAthleteFilter(filterKey, displayLabel) {
       currentAthleteFilter = filterKey;
 
-      // Đóng dropdown menu
       const menu = document.getElementById('pickleballMenu');
       const caret = document.getElementById('pickleballCaret');
       if (menu) menu.classList.add('hidden');
       if (caret) caret.style.transform = 'rotate(0deg)';
 
-      // Cập nhật trạng thái active tab
       document.querySelectorAll('.tabAth-btn').forEach(b => b.classList.remove('tab-active'));
 
       const pbLabel = document.getElementById('pickleballBtnLabel');
@@ -867,7 +875,6 @@
         document.getElementById('tabAth-Bóng đá').classList.add('tab-active');
         pbLabel.textContent = '🏓 Pickleball';
       } else {
-        // Thuộc Pickleball hoặc các nội dung đôi của Pickleball
         pbTab.classList.add('tab-active');
         if (filterKey === 'Pickleball') {
           pbLabel.textContent = '🏓 Pickleball (Tất cả)';
@@ -881,28 +888,19 @@
 
     function handleSportChange() {
       const sport = document.getElementById('athCategory').value;
-      const eventSelect = document.getElementById('athEvent');
-      const eventLabel = document.getElementById('athEventLabel');
-
-      eventSelect.innerHTML = '';
-
+      const pbBox = document.getElementById('pickleballEventsBox');
       if (sport === 'Bóng đá') {
-        eventLabel.textContent = 'Vị Trí Thi Đấu (*)';
-        eventSelect.innerHTML = `
-          <option value="Đội hình chính">⚽ Cầu thủ thi đấu</option>
-          <option value="Thủ môn">🧤 Thủ môn</option>
-          <option value="Dự bị">Dự bị</option>
-        `;
+        pbBox.classList.add('hidden');
       } else {
-        eventLabel.textContent = 'Nội Dung Pickleball (*)';
-        eventSelect.innerHTML = `
-          <option value="Đôi nam">🎾 Đôi Nam</option>
-          <option value="Đôi nữ">👭 Đôi Nữ</option>
-          <option value="Đôi nam nữ">👫 Đôi Nam Nữ</option>
-          <option value="Đơn nam">Đơn Nam</option>
-          <option value="Đơn nữ">Đơn Nữ</option>
-        `;
+        pbBox.classList.remove('hidden');
       }
+    }
+
+    // Chuẩn hóa lấy danh sách các nội dung VĐV tham gia
+    function getAthleteEventsList(ath) {
+      if (Array.isArray(ath.events)) return ath.events;
+      if (ath.event) return [ath.event];
+      return [];
     }
 
     function renderAthletes() {
@@ -910,34 +908,37 @@
       const mobileList = document.getElementById('athleteListMobile');
       const emptyState = document.getElementById('athleteEmptyState');
 
-      let total = athletes.length;
-      let fbCount = 0;
-      let pbCount = 0;
-  
+      // TÍNH TOÁN ĐẾM NGƯỜI DUY NHẤT DỰA VÀO SỐ BHXH (Set Data Structure)
+      const allUniqueInsurances = new Set();
+      const footballInsurances = new Set();
+      const pickleballInsurances = new Set();
 
-      athletes.forEach(a => {
-        if (a.category === 'Bóng đá' || a.category === 'Cả 2 môn') fbCount++;
+      athletes.forEach((a, idx) => {
+        const uid = (a.insurance && a.insurance.trim()) ? a.insurance.trim().toLowerCase() : `ath_no_bhxh_${a.id || idx}`;
+        allUniqueInsurances.add(uid);
+
+        if (a.category === 'Bóng đá' || a.category === 'Cả 2 môn') {
+          footballInsurances.add(uid);
+        }
         if (a.category === 'Pickleball' || a.category === 'Cả 2 môn') {
-          pbCount++;
-          if (a.event === 'Đôi nam' || a.event === 'Đôi nam nữ' || a.event === 'Đôi nữ') {
-            doublesCount++;
-          }
+          pickleballInsurances.add(uid);
         }
       });
 
-      document.getElementById('statTotalAthletes').textContent = total;
-      document.getElementById('statFootballAthletes').textContent = fbCount;
-      document.getElementById('statPickleballAthletes').textContent = pbCount;
-      document.getElementById('athleteCountHeader').textContent = total;
+      // Cập nhật 3 thẻ số liệu chuẩn đếm người
+      document.getElementById('statTotalAthletes').textContent = allUniqueInsurances.size;
+      document.getElementById('statFootballAthletes').textContent = footballInsurances.size;
+      document.getElementById('statPickleballAthletes').textContent = pickleballInsurances.size;
+      document.getElementById('athleteCountHeader').textContent = allUniqueInsurances.size;
 
+      // Lọc danh sách theo nội dung người dùng đang chọn
       const filtered = athletes.filter(a => {
+        const eventsList = getAthleteEventsList(a);
         if (currentAthleteFilter === 'ALL') return true;
         if (currentAthleteFilter === 'Bóng đá') return a.category === 'Bóng đá' || a.category === 'Cả 2 môn';
         if (currentAthleteFilter === 'Pickleball') return a.category === 'Pickleball' || a.category === 'Cả 2 môn';
-        if (currentAthleteFilter === 'Đôi nam') return a.event === 'Đôi nam';
-        if (currentAthleteFilter === 'Đôi nữ') return a.event === 'Đôi nữ';
-        if (currentAthleteFilter === 'Đôi nam nữ') return a.event === 'Đôi nam nữ';
-        return true;
+        
+        return eventsList.includes(currentAthleteFilter);
       });
 
       tbody.innerHTML = '';
@@ -953,19 +954,27 @@
 
       filtered.forEach((ath, idx) => {
         const age = ath.birthYear ? (currentYear - Number(ath.birthYear)) : '-';
+        const eventsList = getAthleteEventsList(ath);
+
         const catBadge = ath.category === 'Bóng đá' 
           ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">⚽ Bóng Đá</span>'
           : ath.category === 'Pickleball'
           ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">🏓 Pickleball</span>'
           : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">⚽ 🏓 Cả 2 môn</span>';
 
-        let eventBadge = `<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">${ath.event || 'Tiêu chuẩn'}</span>`;
-        if (ath.event === 'Đôi nam') {
-          eventBadge = '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">🎾 Đôi Nam</span>';
-        } else if (ath.event === 'Đôi nữ') {
-          eventBadge = '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">👭 Đôi Nữ</span>';
-        } else if (ath.event === 'Đôi nam nữ') {
-          eventBadge = '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">👫 Đôi Nam Nữ</span>';
+        // Tạo chuỗi huy hiệu các nội dung VĐV tham gia
+        let eventsBadgesHtml = '';
+        if (ath.category === 'Bóng đá') {
+          eventsBadgesHtml = '<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">⚽ Cầu thủ bóng đá</span>';
+        } else if (eventsList.length > 0) {
+          eventsBadgesHtml = `<div class="flex flex-wrap gap-1">` + eventsList.map(ev => {
+            if (ev === 'Đôi nam') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">🎾 Đôi Nam</span>';
+            if (ev === 'Đôi nữ') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">👭 Đôi Nữ</span>';
+            if (ev === 'Đôi nam nữ') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">👫 Đôi Nam Nữ</span>';
+            return `<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">${ev}</span>`;
+          }).join('') + `</div>`;
+        } else {
+          eventsBadgesHtml = '<span class="text-xs text-slate-400 italic">Chưa đăng ký nội dung</span>';
         }
 
         // Desktop Row
@@ -975,7 +984,7 @@
           <td class="py-3 px-4 text-center font-mono text-xs text-slate-400">${idx + 1}</td>
           <td class="py-3 px-4 font-bold text-slate-800">${ath.name}</td>
           <td class="py-3 px-4">${catBadge}</td>
-          <td class="py-3 px-4">${eventBadge}</td>
+          <td class="py-3 px-4">${eventsBadgesHtml}</td>
           <td class="py-3 px-4 text-slate-700 font-medium">${ath.birthYear} <span class="text-xs text-slate-400">(${age} tuổi)</span></td>
           <td class="py-3 px-4 font-mono font-semibold text-blue-700">${ath.insurance || '-'}</td>
           <td class="py-3 px-4 text-slate-600 text-xs">${ath.notes || '-'}</td>
@@ -986,7 +995,7 @@
             </div>
           </td>
         `;
-        tbody.appendChild(tr);
+        tbodyDesktop.appendChild(tr);
 
         // Mobile Card
         const card = document.createElement('div');
@@ -994,15 +1003,13 @@
         card.innerHTML = `
           <div class="flex items-center justify-between">
             <span class="font-bold text-sm text-slate-900">${ath.name}</span>
-            <div class="flex items-center gap-1">
-              ${catBadge}
-            </div>
+            ${catBadge}
           </div>
-          <div class="flex items-center gap-2 mt-0.5">
-            <span class="text-xs text-slate-400">Nội dung:</span>
-            ${eventBadge}
+          <div class="flex items-start gap-1.5 mt-0.5">
+            <span class="text-xs text-slate-400 whitespace-nowrap">Nội dung:</span>
+            ${eventsBadgesHtml}
           </div>
-          <div class="text-xs text-slate-600 space-y-0.5 mt-0.5">
+          <div class="text-xs text-slate-600 space-y-0.5 mt-1">
             <p><span class="text-slate-400">Năm sinh:</span> <span class="font-semibold text-slate-800">${ath.birthYear}</span> (${age} tuổi)</p>
             <p><span class="text-slate-400">Số BHXH:</span> <span class="font-mono font-bold text-blue-700">${ath.insurance || 'Chưa có'}</span></p>
             ${ath.notes ? `<p><span class="text-slate-400">Ghi chú:</span> ${ath.notes}</p>` : ''}
@@ -1022,7 +1029,11 @@
       document.getElementById('athName').value = '';
       document.getElementById('athCategory').value = 'Pickleball';
       handleSportChange();
-      document.getElementById('athEvent').value = 'Đôi nam';
+      
+      document.querySelectorAll('input[name="pbEvent"]').forEach(cb => cb.checked = false);
+      const defaultCb = document.querySelector('input[name="pbEvent"][value="Đôi nam"]');
+      if (defaultCb) defaultCb.checked = true;
+
       document.getElementById('athBirthYear').value = '';
       document.getElementById('athInsurance').value = '';
       document.getElementById('athNotes').value = '';
@@ -1045,7 +1056,12 @@
       document.getElementById('athName').value = a.name;
       document.getElementById('athCategory').value = a.category;
       handleSportChange();
-      document.getElementById('athEvent').value = a.event || 'Đôi nam';
+
+      const eventsList = getAthleteEventsList(a);
+      document.querySelectorAll('input[name="pbEvent"]').forEach(cb => {
+        cb.checked = eventsList.includes(cb.value);
+      });
+
       document.getElementById('athBirthYear').value = a.birthYear;
       document.getElementById('athInsurance').value = a.insurance || '';
       document.getElementById('athNotes').value = a.notes || '';
@@ -1060,10 +1076,20 @@
       const editId = document.getElementById('athId').value;
       const name = document.getElementById('athName').value.trim();
       const category = document.getElementById('athCategory').value;
-      const event = document.getElementById('athEvent').value;
       const birthYear = document.getElementById('athBirthYear').value.trim();
       const insurance = document.getElementById('athInsurance').value.trim();
       const notes = document.getElementById('athNotes').value.trim();
+
+      const selectedEvents = [];
+      if (category !== 'Bóng đá') {
+        document.querySelectorAll('input[name="pbEvent"]:checked').forEach(cb => {
+          selectedEvents.push(cb.value);
+        });
+        if (selectedEvents.length === 0) {
+          alert("Vui lòng tích chọn ít nhất một nội dung thi đấu Pickleball (Ví dụ: Đôi nam, Đôi nam nữ...)!");
+          return;
+        }
+      }
 
       if (!name) {
         alert("Vui lòng nhập Họ và Tên vận động viên!");
@@ -1074,13 +1100,18 @@
         return;
       }
       if (!insurance) {
-        alert("Vui lòng nhập Mã số BHXH để xác minh tư cách thi đấu!");
+        alert("Vui lòng nhập Mã số BHXH để hệ thống phân biệt danh tính và loại trừ trùng lặp!");
         return;
       }
 
       const athItem = {
         id: editId || Date.now().toString(),
-        name, category, event, birthYear, insurance, notes
+        name,
+        category,
+        events: selectedEvents,
+        birthYear,
+        insurance,
+        notes
       };
 
       if (editId) {
@@ -1159,16 +1190,19 @@
         return;
       }
       const currentYear = new Date().getFullYear();
-      const rows = athletes.map((a, idx) => ({
-        'STT': idx + 1,
-        'Họ Và Tên': a.name,
-        'Môn Tham Gia': a.category,
-        'Nội Dung Thi Đấu': a.event || '',
-        'Năm Sinh': a.birthYear,
-        'Tuổi': a.birthYear ? (currentYear - Number(a.birthYear)) : '',
-        'Mã Số BHXH': a.insurance,
-        'Bạn Cặp / Ghi Chú': a.notes || ''
-      }));
+      const rows = athletes.map((a, idx) => {
+        const eventsList = getAthleteEventsList(a);
+        return {
+          'STT': idx + 1,
+          'Họ Và Tên': a.name,
+          'Môn Tham Gia': a.category,
+          'Các Nội Dung Thi Đấu': eventsList.join(', ') || (a.category === 'Bóng đá' ? 'Bóng đá' : ''),
+          'Năm Sinh': a.birthYear,
+          'Tuổi': a.birthYear ? (currentYear - Number(a.birthYear)) : '',
+          'Mã Số BHXH': a.insurance,
+          'Ghi Chú / Bạn Đôi': a.notes || ''
+        };
+      });
 
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
