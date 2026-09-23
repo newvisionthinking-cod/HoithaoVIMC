@@ -3,841 +3,1255 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Lịch Công Việc & Đánh Giá</title>
+  <title>Quản Lý Hội Thao VIMC - Chi Phí & Vận Động Viên</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Firebase SDK v8.10.1 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- SheetJS xuất Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #0f172a; padding-bottom: 70px; line-height: 1.5; }
-    
-    header { background: #0f172a; color: #fff; padding: 12px 16px; position: sticky; top: 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
-    .header-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .header-btns { display: flex; align-items: center; gap: 8px; }
-    .btn-top { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-    .btn-top:hover { background: #334155; }
-    
-    .sync-status { font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: 700; background: #334155; color: #94a3b8; }
-    .sync-active { background: #065f46; color: #a7f3d0; }
-    .sync-loading { background: #854d0e; color: #fef08a; }
-
-    .container { max-width: 1100px; margin: 14px auto; padding: 0 12px; }
-    
-    /* Tabs */
-    .nav-tabs { display: flex; gap: 10px; border-bottom: 2px solid #cbd5e1; margin-bottom: 14px; }
-    .tab-btn { background: none; border: none; padding: 10px 14px; font-size: 14px; font-weight: 700; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
-    .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
-
-    /* Top Control Panel */
-    .top-panel { background: #fff; border-radius: 12px; padding: 14px; border: 1px solid #cbd5e1; margin-bottom: 16px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .date-wrap { display: flex; align-items: center; gap: 8px; }
-    .date-btn { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; width: 34px; height: 34px; font-weight: bold; cursor: pointer; }
-    input[type="date"] { border: 1px solid #94a3b8; padding: 6px 10px; border-radius: 6px; font-size: 14px; font-weight: bold; color: #0f172a; outline: none; background: #fff; }
-    .day-badge { background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 700; }
-    
-    .panel-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .btn-action-all { background: #f8fafc; border: 1.5px solid #94a3b8; color: #334155; padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
-    .btn-action-all:hover { background: #e2e8f0; }
-
-    .btn-view-result { background: #eff6ff; border: 1.5px solid #2563eb; color: #1d4ed8; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-view-result:hover { background: #2563eb; color: #fff; }
-
-    /* Section Blocks (Sáng, Chiều, Tối) */
-    .session-card { background: #fff; border-radius: 12px; border: 2px solid #cbd5e1; margin-bottom: 22px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-    
-    .session-title-bar { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #cbd5e1; }
-    .session-morning { background: linear-gradient(to right, #eff6ff, #f8fafc); border-left: 6px solid #2563eb; }
-    .session-afternoon { background: linear-gradient(to right, #fefce8, #f8fafc); border-left: 6px solid #d97706; }
-    .session-evening { background: linear-gradient(to right, #faf5ff, #f8fafc); border-left: 6px solid #7c3aed; }
-    
-    .session-label { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-    .session-sub { font-size: 12px; color: #64748b; font-weight: 700; }
-
-    .table-head { display: none; background: #f1f5f9; padding: 10px 16px; font-size: 12px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 2px solid #cbd5e1; }
-    @media (min-width: 768px) {
-      .table-head { display: grid; grid-template-columns: 145px 1fr 1fr 130px; gap: 14px; align-items: center; }
-    }
-
-    /* GẠCH PHÂN TÁCH GIỮA CÁC KHUNG GIỜ */
-    .table-row { padding: 14px 16px; border-bottom: 2px solid #cbd5e1; display: flex; flex-direction: column; gap: 10px; background: #fff; }
-    .table-row:nth-child(even) { background: #fafcff; }
-    .table-row:last-child { border-bottom: none; }
-    @media (min-width: 768px) {
-      .table-row { display: grid; grid-template-columns: 145px 1fr 1fr 130px; gap: 14px; align-items: start; }
-    }
-
-    .time-wrap { display: flex; flex-direction: column; gap: 8px; }
-    .time-col { font-family: monospace; font-size: 13px; font-weight: 800; background: #e2e8f0; border: 1.5px solid #94a3b8; padding: 6px 10px; border-radius: 6px; width: fit-content; color: #0f172a; }
-    
-    /* Nút Báo giờ này (Chọn lọc từng khung giờ) */
-    .btn-slot-notif { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; width: fit-content; border: 1.5px solid #cbd5e1; background: #f8fafc; color: #64748b; transition: all 0.15s; }
-    .btn-slot-notif.active { background: #fef3c7; border-color: #f59e0b; color: #b45309; }
-
-    .input-col { display: flex; flex-direction: column; gap: 5px; }
-    .mobile-lbl { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; }
-    @media (min-width: 768px) { .mobile-lbl { display: none; } }
-    
-    .quick-select { border: 1px solid #94a3b8; background: #fff; padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #1d4ed8; outline: none; cursor: pointer; }
-    .quick-select:hover { border-color: #1d4ed8; background: #eff6ff; }
-
-    textarea.text-box { width: 100%; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; font-size: 13px; font-family: inherit; resize: vertical; min-height: 52px; outline: none; background: #fff; line-height: 1.5; }
-    textarea.text-box:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
-
-    /* Score buttons: 1, 0,5, 0 */
-    .score-wrap { display: flex; gap: 4px; }
-    .sc-btn { flex: 1; border: 1.5px solid #cbd5e1; background: #f8fafc; padding: 8px 0; border-radius: 6px; font-size: 13px; font-weight: 800; cursor: pointer; color: #475569; text-align: center; transition: all 0.15s; }
-    .sc-btn:hover { background: #e2e8f0; }
-    
-    .sc-btn.active-1 { background: #16a34a !important; color: #fff !important; border-color: #15803d !important; }
-    .sc-btn.active-05 { background: #ea580c !important; color: #fff !important; border-color: #c2410c !important; }
-    .sc-btn.active-0 { background: #dc2626 !important; color: #fff !important; border-color: #b91c1c !important; }
-
-    /* Modal Popup */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 100; display: none; align-items: center; justify-content: center; padding: 16px; }
-    .modal-box { background: #fff; width: 100%; max-width: 420px; border-radius: 14px; padding: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
-    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
-    .modal-head-title { font-size: 16px; font-weight: 800; color: #0f172a; }
-    .modal-close { border: none; background: none; font-size: 22px; cursor: pointer; color: #64748b; }
-    
-    .res-card-content { padding: 18px; border-radius: 12px; text-align: center; margin-bottom: 14px; border: 2px solid transparent; }
-    .res-card-green { background: #dcfce7; border-color: #22c55e; color: #15803d; }
-    .res-card-orange { background: #ffedd5; border-color: #f97316; color: #c2410c; }
-    .res-card-red { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
-    .res-modal-score { font-size: 38px; font-weight: 900; font-family: monospace; margin: 4px 0; }
-    .res-modal-title { font-size: 15px; font-weight: 800; text-transform: uppercase; }
-    .res-modal-alert { font-size: 12px; font-weight: 700; margin-top: 6px; padding: 6px 10px; border-radius: 6px; background: rgba(255,255,255,0.7); display: inline-block; }
-
-    /* Dashboard */
-    .filter-bar { background: #fff; padding: 12px 14px; border-radius: 10px; border: 1px solid #cbd5e1; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .filter-btn-group { display: flex; gap: 8px; }
-    .filter-btn { border: 1px solid #cbd5e1; background: #f8fafc; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
-    .filter-btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
-
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 14px; }
-    .kpi-box { background: #fff; border-radius: 10px; padding: 14px; border: 1px solid #cbd5e1; }
-    .kpi-num { font-size: 24px; font-weight: 800; font-family: monospace; margin: 4px 0; }
-    .kpi-text { font-size: 12px; font-weight: 700; color: #64748b; }
-    
-    .panel-box { background: #fff; border-radius: 10px; border: 1px solid #cbd5e1; padding: 16px; margin-bottom: 14px; }
-    .panel-header { font-size: 15px; font-weight: 800; margin-bottom: 10px; color: #1e293b; }
-    .panel-body { font-size: 13px; line-height: 1.7; color: #334155; }
-    .advice-card { margin-top: 10px; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; }
-    .adv-green { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
-    .adv-orange { background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; }
-    .adv-red { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
-
-    .dash-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .dash-table th { background: #f8fafc; padding: 10px 12px; text-align: left; font-weight: 800; border-bottom: 2px solid #cbd5e1; color: #475569; }
-    .dash-table td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
-    .dash-badge { padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 800; }
+    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
+    .nav-btn-active { background-color: #1e40af; color: #ffffff; }
   </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-20 select-none">
 
-  <!-- HEADER -->
-  <header>
-    <div class="header-title">📊 Lịch Công Việc & Đánh Giá</div>
-    <div class="header-btns">
-      <span id="syncIndicator" class="sync-status">Đang nạp...</span>
-      <button onclick="configSyncUrl()" class="btn-top" title="Cài đặt link kết nối Google Sheets">⚙️ Cài Link Sheets</button>
+  <!-- Header -->
+  <header class="bg-blue-800 text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-[10px] uppercase tracking-wider bg-blue-700 text-blue-100 px-2 py-0.5 rounded font-medium">Hội Thao VIMC</span>
+          <h1 class="text-base sm:text-xl font-bold mt-0.5">Quản Lý Đội Thể Thao & Chi Phí</h1>
+        </div>
+        <span id="cloudBadge" class="text-[11px] bg-amber-500/20 text-amber-200 border border-amber-400/30 px-2 py-0.5 rounded-full flex items-center gap-1 sm:hidden">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Cloud
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="cloudBadgeDesktop" class="hidden sm:flex text-xs bg-blue-900/60 text-amber-200 border border-amber-500/40 px-2.5 py-1 rounded-full items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Đồng bộ Cloud
+        </span>
+        <button id="exportExcelBtn" onclick="exportCurrentView()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow flex items-center gap-1">
+          📊 Xuất Excel
+        </button>
+      </div>
+    </div>
+
+    <!-- Thanh Điều Hướng 2 Phân Hệ -->
+    <div class="bg-blue-900/80 px-4 py-1.5 border-t border-blue-700/50">
+      <div class="max-w-5xl mx-auto flex gap-2 text-xs sm:text-sm font-medium">
+        <button onclick="switchMainTab('EXPENSES')" id="nav-btn-expenses" class="nav-btn px-3 py-1.5 rounded-lg text-blue-100 hover:text-white transition flex items-center gap-1.5 nav-btn-active">
+          <span>💰</span> Sổ Chi Tiêu & Quỹ
+        </button>
+        <button onclick="switchMainTab('ATHLETES')" id="nav-btn-athletes" class="nav-btn px-3 py-1.5 rounded-lg text-blue-100 hover:text-white transition flex items-center gap-1.5">
+          <span>🏃</span> Danh Sách VĐV (<span id="athleteCountHeader">0</span> người)
+        </button>
+      </div>
     </div>
   </header>
 
-  <div class="container">
-    
-    <!-- NAVIGATION TABS -->
-    <div class="nav-tabs">
-      <button onclick="switchTab('daily')" id="tab-daily" class="tab-btn active">📅 Lịch & Chấm Điểm Hằng Ngày</button>
-      <button onclick="switchTab('dashboard')" id="tab-dash" class="tab-btn">📊 Dashboard (Ngày / Tháng / Quý)</button>
+  <!-- ==================== PHÂN HỆ 1: CHI PHÍ ==================== -->
+  <section id="sectionExpenses" class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng Tạm Ứng</span>
+          <p id="totalAdvance" class="text-xl sm:text-2xl font-bold text-blue-600 mt-1">0 đ</p>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-2">Nguồn kinh phí đã nhận</p>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-rose-200 overflow-hidden">
+        <button type="button" onclick="toggleExpenseBreakdown()" class="w-full p-4 text-left flex items-start justify-between bg-rose-50/40 hover:bg-rose-50/80 transition">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-rose-700 uppercase tracking-wider">Tổng Đã Chi</span>
+              <span class="text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-medium">Bấm xem chi tiết</span>
+            </div>
+            <p id="totalExpense" class="text-xl sm:text-2xl font-bold text-rose-600 mt-1">0 đ</p>
+          </div>
+          <div id="expenseChevron" class="text-rose-500 font-bold text-sm transition-transform duration-200">▼</div>
+        </button>
+
+        <div id="expenseBreakdown" class="hidden border-t border-rose-100 bg-white px-4 py-3 space-y-2 text-xs divide-y divide-slate-100">
+          <div class="flex justify-between items-center pt-1.5 first:pt-0">
+            <span class="text-slate-600 flex items-center gap-1.5"><span>⚽</span> Chi Bóng Đá:</span>
+            <span id="footballExpense" class="font-bold text-slate-800 text-sm">0 đ</span>
+          </div>
+          <div class="flex justify-between items-center pt-1.5">
+            <span class="text-slate-600 flex items-center gap-1.5"><span>🏓</span> Chi Pickleball:</span>
+            <span id="pickleballExpense" class="font-bold text-slate-800 text-sm">0 đ</span>
+          </div>
+          <div class="flex justify-between items-center pt-1.5">
+            <span class="text-slate-600 flex items-center gap-1.5"><span>📋</span> Chi Khác:</span>
+            <span id="otherExpense" class="font-bold text-slate-800 text-sm">0 đ</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- VIEW 1: DAILY -->
-    <div id="view-daily">
-      <!-- DATE BAR & ACTIONS -->
-      <div class="top-panel">
-        <div class="date-wrap">
-          <button onclick="changeDay(-1)" class="date-btn">◀</button>
-          <input type="date" id="datePicker" onchange="onDateChange(this.value)">
-          <button onclick="changeDay(1)" class="date-btn">▶</button>
-          <span id="dayBadgeText" class="day-badge"></span>
-        </div>
-
-        <div class="panel-actions">
-          <button onclick="toggleAllReminders(true)" class="btn-action-all">📅 Bật báo tất cả</button>
-          <button onclick="toggleAllReminders(false)" class="btn-action-all">🔕 Tắt báo tất cả</button>
-          <button onclick="openResultModal()" class="btn-view-result">
-            👁️ Xem kết quả thực hiện
-          </button>
-        </div>
+    <!-- Banner Số Dư Còn Lại -->
+    <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 sm:p-5 rounded-2xl shadow-md mb-5 flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase font-medium text-blue-200 tracking-wider">Số Tiền Còn Lại</p>
+        <p id="remainingFund" class="text-2xl sm:text-3xl font-extrabold mt-0.5">0 đ</p>
       </div>
-
-      <!-- 1. BUỔI SÁNG -->
-      <div class="session-card">
-        <div class="session-title-bar session-morning">
-          <div class="session-label">
-            <span>🌅 BUỔI SÁNG</span>
-          </div>
-          <div class="session-sub">4 khung giờ (08:00 - 11:30)</div>
-        </div>
-        <div class="table-head">
-          <div>Khung Giờ</div>
-          <div>To Do (Kế hoạch)</div>
-          <div>Thực Hiện (Kết quả)</div>
-          <div>Chấm Điểm</div>
-        </div>
-        <div id="slotsMorning"></div>
-      </div>
-
-      <!-- 2. BUỔI CHIỀU -->
-      <div class="session-card">
-        <div class="session-title-bar session-afternoon">
-          <div class="session-label">
-            <span>☀️ BUỔI CHIỀU</span>
-          </div>
-          <div class="session-sub">3 khung giờ (14:00 - 17:00)</div>
-        </div>
-        <div class="table-head">
-          <div>Khung Giờ</div>
-          <div>To Do (Kế hoạch)</div>
-          <div>Thực Hiện (Kết quả)</div>
-          <div>Chấm Điểm</div>
-        </div>
-        <div id="slotsAfternoon"></div>
-      </div>
-
-      <!-- 3. BUỔI TỐI -->
-      <div class="session-card">
-        <div class="session-title-bar session-evening">
-          <div class="session-label">
-            <span>🌙 BUỔI TỐI</span>
-          </div>
-          <div class="session-sub">3 khung giờ (20:00 - 23:00)</div>
-        </div>
-        <div class="table-head">
-          <div>Khung Giờ</div>
-          <div>To Do (Kế hoạch)</div>
-          <div>Thực Hiện (Kết quả)</div>
-          <div>Chấm Điểm</div>
-        </div>
-        <div id="slotsEvening"></div>
-      </div>
-
+      <button onclick="openModal()" class="bg-white text-blue-800 hover:bg-blue-50 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1">
+        <span>+</span> Thêm Giao Dịch
+      </button>
     </div>
 
-    <!-- VIEW 2: DASHBOARD -->
-    <div id="view-dashboard" style="display: none;">
-      <div class="filter-bar">
-        <div class="filter-btn-group">
-          <button onclick="setFilter('month')" id="f-month" class="filter-btn active">Theo Tháng Này</button>
-          <button onclick="setFilter('quarter')" id="f-quarter" class="filter-btn">Theo Quý Này</button>
-          <button onclick="setFilter('all')" id="f-all" class="filter-btn">Tất Cả Lịch Sử</button>
-        </div>
-        <div id="filterLabel" style="font-size: 13px; font-weight: 800; color: #1e293b;"></div>
+    <!-- Danh Sách Chi Phí -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="flex border-b border-slate-200 text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2 overflow-x-auto">
+        <button onclick="filterCategory('ALL')" id="tab-ALL" class="tab-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap">Tất Cả</button>
+        <button onclick="filterCategory('Bóng đá')" id="tab-Bóng đá" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">⚽ Bóng Đá</button>
+        <button onclick="filterCategory('Pickleball')" id="tab-Pickleball" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">🏓 Pickleball</button>
+        <button onclick="filterCategory('Khác')" id="tab-Khác" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">📋 Khác</button>
       </div>
 
-      <div class="kpi-grid">
-        <div class="kpi-box" style="border-top: 4px solid #2563eb;">
-          <div class="kpi-text">Số ngày có To Do</div>
-          <div class="kpi-num" id="totalDays" style="color: #2563eb;">0</div>
-        </div>
-        <div class="kpi-box" style="border-top: 4px solid #16a34a;">
-          <div class="kpi-text">Ngày Xanh (>= 8.0 đ)</div>
-          <div class="kpi-num" id="greenDays" style="color: #16a34a;">0</div>
-          <div style="font-size:11px; color:#16a34a; font-weight:700;">Xuất sắc / Đạt</div>
-        </div>
-        <div class="kpi-box" style="border-top: 4px solid #ea580c;">
-          <div class="kpi-text">Ngày Cam (6.0 - 7.5 đ)</div>
-          <div class="kpi-num" id="orangeDays" style="color: #ea580c;">0</div>
-          <div style="font-size:11px; color:#ea580c; font-weight:700;">Khá / Cần cố gắng</div>
-        </div>
-        <div class="kpi-box" style="border-top: 4px solid #dc2626;">
-          <div class="kpi-text">Ngày Đỏ (< 6.0 đ)</div>
-          <div class="kpi-num" id="redDays" style="color: #dc2626;">0</div>
-          <div style="font-size:11px; color:#dc2626; font-weight:700;">Cảnh báo hiệu suất</div>
-        </div>
-      </div>
-
-      <div class="panel-box">
-        <div class="panel-header">💡 Tự Động Phân Tích & Lời Khuyên Hành Động</div>
-        <div id="analysisContent" class="panel-body">Đang tải phân tích...</div>
-        <div id="adviceCard" class="advice-card adv-green">Lời khuyên...</div>
-      </div>
-
-      <div class="panel-box" style="padding: 0; overflow-x: auto;">
-        <div style="padding: 12px 16px; font-weight: 800; border-bottom: 1px solid #cbd5e1; font-size: 14px;">
-          📋 Danh sách chi tiết từng ngày
-        </div>
-        <table class="dash-table">
-          <thead>
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
             <tr>
-              <th>Ngày</th>
-              <th>Thứ</th>
-              <th>Số việc To Do</th>
-              <th>Điểm đạt</th>
-              <th>Đánh giá</th>
+              <th class="py-3 px-4 font-semibold">Ngày</th>
+              <th class="py-3 px-4 font-semibold">Loại</th>
+              <th class="py-3 px-4 font-semibold">Bộ Môn</th>
+              <th class="py-3 px-4 font-semibold">Nội Dung</th>
+              <th class="py-3 px-4 font-semibold">Chi Cho Ai</th>
+              <th class="py-3 px-4 font-semibold">Chứng Từ</th>
+              <th class="py-3 px-4 font-semibold text-right">Số Tiền</th>
+              <th class="py-3 px-4 font-semibold text-center">Thao Tác</th>
             </tr>
           </thead>
-          <tbody id="dashTableBody"></tbody>
+          <tbody id="txTableDesktop" class="divide-y divide-slate-100"></tbody>
         </table>
       </div>
+
+      <div id="txListMobile" class="md:hidden divide-y divide-slate-100"></div>
+
+      <div id="emptyState" class="hidden text-center py-12 text-slate-400">
+        <p class="text-sm">Chưa có giao dịch nào được lưu.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PHÂN HỆ 2: VẬN ĐỘNG VIÊN ==================== -->
+  <section id="sectionAthletes" class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6 hidden">
+    <!-- 3 Thẻ Thống Kê Cân Đối -->
+    <div class="grid grid-cols-3 gap-2.5 sm:gap-3 mb-4">
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 text-center">
+        <span class="text-xs font-semibold text-slate-500 uppercase">Tổng VĐV</span>
+        <p id="statTotalAthletes" class="text-xl sm:text-2xl font-bold text-blue-700 mt-0.5">0</p>
+        <span class="text-[10px] text-slate-400">người (theo BHXH)</span>
+      </div>
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-amber-200 text-center bg-amber-50/30">
+        <span class="text-xs font-semibold text-amber-800 uppercase">⚽ Bóng Đá</span>
+        <p id="statFootballAthletes" class="text-xl sm:text-2xl font-bold text-amber-700 mt-0.5">0</p>
+        <span class="text-[10px] text-amber-600/70">người</span>
+      </div>
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-indigo-200 text-center bg-indigo-50/30">
+        <span class="text-xs font-semibold text-indigo-800 uppercase">🏓 Pickleball</span>
+        <p id="statPickleballAthletes" class="text-xl sm:text-2xl font-bold text-indigo-700 mt-0.5">0</p>
+        <span class="text-[10px] text-indigo-600/70">người duy nhất</span>
+      </div>
     </div>
 
-  </div>
-
-  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ THỰC HIỆN -->
-  <div id="resultModal" class="modal-backdrop">
-    <div class="modal-box">
-      <div class="modal-head">
-        <div class="modal-head-title">Kết Quả Thực Hiện Trong Ngày</div>
-        <button onclick="closeResultModal()" class="modal-close">&times;</button>
+    <!-- Banner VĐV -->
+    <div class="bg-gradient-to-r from-slate-800 to-blue-900 text-white p-4 sm:p-5 rounded-2xl shadow-md mb-4 flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase font-medium text-slate-300 tracking-wider">Danh Sách Nhân Sự Thi Đấu</p>
+        <p class="text-base sm:text-xl font-bold mt-0.5">Hồ Sơ & Phân Cặp Thi Đấu</p>
       </div>
-      
-      <div id="modalCardContent" class="res-card-content res-card-green">
-        <div id="modalCardLevel" class="res-modal-title">XUẤT SẮC (ĐẠT CHUẨN)</div>
-        <div id="modalCardScore" class="res-modal-score">0.0 đ</div>
-        <div id="modalCardAlert" class="res-modal-alert" style="display:none;">⚠️ Cảnh báo: Dưới 6 điểm, hiệu suất kém!</div>
+      <button onclick="openAthleteModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1">
+        <span>+</span> Đăng Ký VĐV
+      </button>
+    </div>
+
+    <!-- Bộ Lọc VĐV RÕ RÀNG, ĐƠN GIẢN, KHÔNG DROPDOWN PHỨC TẠP -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="flex items-center border-b border-slate-200 text-xs sm:text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2">
+        <button onclick="selectAthleteFilter('ALL')" id="tabAth-ALL" class="tabAth-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap transition">
+          Tất Cả
+        </button>
+        <button onclick="selectAthleteFilter('Bóng đá')" id="tabAth-Bóng đá" class="tabAth-btn py-3 px-3 sm:px-4 whitespace-nowrap transition">
+          ⚽ Bóng Đá
+        </button>
+        <button onclick="selectAthleteFilter('Pickleball')" id="tabAth-Pickleball" class="tabAth-btn py-3 px-3 sm:px-4 whitespace-nowrap transition text-indigo-700">
+          🏓 Pickleball
+        </button>
       </div>
 
-      <div id="modalStatsBreakdown" style="font-size: 13px; color: #475569; line-height: 1.8; margin-bottom: 16px; padding: 0 4px;"></div>
+      <!-- Bảng Desktop VĐV (Tự co giãn, xuống dòng tự nhiên) -->
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+            <tr>
+              <th class="py-3 px-3 font-semibold text-center w-12">STT</th>
+              <th class="py-3 px-3 font-semibold">Họ Và Tên</th>
+              <th class="py-3 px-3 font-semibold">Môn Thi Đấu</th>
+              <th class="py-3 px-3 font-semibold">Nội Dung Tham Gia</th>
+              <th class="py-3 px-3 font-semibold">Năm Sinh (Tuổi)</th>
+              <th class="py-3 px-3 font-semibold">Mã Số BHXH</th>
+              <th class="py-3 px-3 font-semibold">Ghi Chú / Bạn Đôi</th>
+              <th class="py-3 px-3 font-semibold text-center w-24">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="athleteTableDesktop" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
 
-      <button onclick="closeResultModal()" style="width: 100%; padding: 10px; background: #0f172a; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Đóng</button>
+      <!-- Danh Sách Mobile VĐV -->
+      <div id="athleteListMobile" class="md:hidden divide-y divide-slate-100"></div>
+
+      <!-- Trạng Thái Trống -->
+      <div id="athleteEmptyState" class="hidden text-center py-12 text-slate-400">
+        <p class="text-sm">Chưa có vận động viên nào trong danh mục này.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MODAL CHI TIÊU ==================== -->
+  <div id="modalForm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col">
+      <div class="px-5 py-3.5 bg-slate-100 border-b border-slate-200 flex justify-between items-center shrink-0">
+        <h3 class="font-bold text-slate-800 text-sm sm:text-base" id="modalTitle">Thêm Giao Dịch</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      </div>
+
+      <div class="p-4 sm:p-5 space-y-3 text-sm overflow-y-auto">
+        <input type="hidden" id="txId">
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1 text-xs">Loại Giao Dịch</label>
+            <select id="txType" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-xs sm:text-sm font-medium">
+              <option value="EXPENSE">Khoản Chi</option>
+              <option value="ADVANCE">Tạm Ứng</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1 text-xs">Bộ Môn</label>
+            <select id="txCategory" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-xs sm:text-sm">
+              <option value="Bóng đá">⚽ Bóng đá</option>
+              <option value="Pickleball">🏓 Pickleball</option>
+              <option value="Khác">📋 Khác</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Ngày Giao Dịch</label>
+          <input type="date" id="txDate" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Chi Cho Ai / Người Nhận</label>
+          <input type="text" id="txPerson" placeholder="VD: Sân bóng, Cửa hàng thể thao..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Nội Dung Chi</label>
+          <input type="text" id="txDescription" placeholder="VD: Thuê sân, Nước uống..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Số Tiền (VNĐ)</label>
+          <input type="number" id="txAmount" placeholder="0" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold">
+        </div>
+
+        <div class="border-t border-slate-200 pt-2.5">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block font-semibold text-slate-700 text-xs">Tệp Đính Kèm (Tối đa 10 tệp)</label>
+            <span id="fileCountBadge" class="text-[11px] text-slate-500">0/10 tệp</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mb-2">Ảnh hóa đơn (.jpg, .png), tài liệu PDF, Word</p>
+
+          <label class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 p-3 rounded-xl cursor-pointer">
+            <span class="text-xl">📷 / 📎</span>
+            <span class="text-[11px] font-semibold text-blue-600 mt-0.5">Bấm để chụp ảnh hoặc chọn tệp</span>
+            <input type="file" id="txFileInput" multiple accept="image/*,.pdf,.doc,.docx" class="hidden" onchange="handleFileSelection(event)">
+          </label>
+
+          <div id="pendingFileList" class="mt-2 space-y-1 max-h-32 overflow-y-auto"></div>
+        </div>
+
+        <div class="pt-2 flex gap-2 border-t border-slate-200 shrink-0">
+          <button type="button" onclick="closeModal()" class="w-1/2 py-2.5 rounded-lg border border-slate-300 text-slate-600 font-medium hover:bg-slate-50">Hủy</button>
+          <button type="button" id="submitBtn" onclick="saveDataNow()" class="w-1/2 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition">Lưu Dữ Liệu</button>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- ==================== MODAL VẬN ĐỘNG VIÊN ==================== -->
+  <div id="modalAthlete" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col">
+      <div class="px-5 py-3.5 bg-slate-100 border-b border-slate-200 flex justify-between items-center shrink-0">
+        <h3 class="font-bold text-slate-800 text-sm sm:text-base" id="athleteModalTitle">Đăng Ký Vận Động Viên</h3>
+        <button onclick="closeAthleteModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      </div>
+
+      <div class="p-4 sm:p-5 space-y-3 text-sm overflow-y-auto">
+        <input type="hidden" id="athId">
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Họ Và Tên VĐV (*)</label>
+          <input type="text" id="athName" placeholder="VD: Nguyễn Văn A" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold">
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Bộ Môn Thi Đấu (*)</label>
+          <select id="athCategory" onchange="handleSportChange()" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-xs sm:text-sm font-medium">
+            <option value="Pickleball">🏓 Pickleball</option>
+            <option value="Bóng đá">⚽ Bóng Đá</option>
+            <option value="Cả 2 môn">⚽ 🏓 Cả 2 Môn (Bóng đá & Pickleball)</option>
+          </select>
+        </div>
+
+        <!-- Khung chọn nội dung Pickleball -->
+        <div id="pickleballEventsBox" class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2">
+          <label class="block font-semibold text-indigo-900 text-xs">Nội dung Pickleball (Tích chọn nội dung):</label>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label class="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-blue-400">
+              <input type="checkbox" name="pbEvent" value="Đôi nam" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+              <span class="font-medium text-slate-700">🎾 Đôi Nam</span>
+            </label>
+            <label class="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-purple-400">
+              <input type="checkbox" name="pbEvent" value="Đôi nam nữ" class="rounded text-purple-600 focus:ring-purple-500 w-4 h-4">
+              <span class="font-medium text-slate-700">👫 Đôi Nam Nữ</span>
+            </label>
+            <label class="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-rose-400">
+              <input type="checkbox" name="pbEvent" value="Đôi nữ" class="rounded text-rose-600 focus:ring-rose-500 w-4 h-4">
+              <span class="font-medium text-slate-700">👭 Đôi Nữ</span>
+            </label>
+            <label class="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-slate-400">
+              <input type="checkbox" name="pbEvent" value="Đơn nam" class="rounded text-slate-600 focus:ring-slate-500 w-4 h-4">
+              <span class="font-medium text-slate-700">Đơn Nam</span>
+            </label>
+            <label class="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-slate-400">
+              <input type="checkbox" name="pbEvent" value="Đơn nữ" class="rounded text-slate-600 focus:ring-slate-500 w-4 h-4">
+              <span class="font-medium text-slate-700">Đơn Nữ</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1 text-xs">Năm Sinh (*)</label>
+            <input type="number" id="athBirthYear" placeholder="VD: 1990" min="1950" max="2020" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1 text-xs">Số Mã BHXH (*) (Duy nhất)</label>
+            <input type="text" id="athInsurance" placeholder="Mã số BHXH 10 số" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1 text-xs">Ghi Chú / Bạn Cùng Đôi</label>
+          <input type="text" id="athNotes" placeholder="VD: Đôi nam cặp với B..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm">
+        </div>
+
+        <div class="pt-3 flex gap-2 border-t border-slate-200 shrink-0">
+          <button type="button" onclick="closeAthleteModal()" class="w-1/2 py-2.5 rounded-lg border border-slate-300 text-slate-600 font-medium hover:bg-slate-50">Hủy</button>
+          <button type="button" id="athSubmitBtn" onclick="saveAthleteNow()" class="w-1/2 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm transition">Lưu VĐV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Xem File -->
+  <div id="viewModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-4 flex flex-col max-h-[90vh]">
+      <div class="flex justify-between items-center pb-2 border-b border-slate-200">
+        <h4 id="viewModalTitle" class="text-xs sm:text-sm font-semibold truncate text-slate-800 pr-2">Chứng từ</h4>
+        <button onclick="closeViewModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div id="viewModalBody" class="flex-1 overflow-auto flex items-center justify-center p-2 min-h-[200px]"></div>
+      <div class="pt-2.5 flex justify-end gap-2 border-t border-slate-200">
+        <a id="downloadBtn" download="" href="#" class="px-3.5 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow">
+          ⬇️ Tải Tệp Về Máy
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT ==================== -->
   <script>
-    var SESSIONS = [
-      {
-        id: "slotsMorning",
-        slots: ["08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-11:30"]
-      },
-      {
-        id: "slotsAfternoon",
-        slots: ["14:00-15:00", "15:00-16:00", "16:00-17:00"]
-      },
-      {
-        id: "slotsEvening",
-        slots: ["20:00-21:00", "21:00-22:00", "22:00-23:00"]
-      }
-    ];
+    const firebaseConfig = {
+      apiKey: "AIzaSyApjuT6bCk-3B6TbwyB0JsEqdY2Bze-8Bg",
+      authDomain: "hoithaovimc.firebaseapp.com",
+      projectId: "hoithaovimc",
+      storageBucket: "hoithaovimc.firebasestorage.app",
+      messagingSenderId: "351510274467",
+      appId: "1:351510274467:web:e675ed2b843a0176133a16"
+    };
 
-    var ALL_SLOTS = [];
-    SESSIONS.forEach(function(sess) {
-      sess.slots.forEach(function(s) { ALL_SLOTS.push(s); });
-    });
-
-    var TODO_TEMPLATES = [
-      "Họp giao ban",
-      "Dạy ku học Toán",
-      "Dạy ku học Tiếng Anh",
-      "Cập nhật Sản lượng lên Big Data",
-      "Cập nhật doanh thu",
-      "Cập nhật KPI",
-      "Tập đàn",
-      "Chơi thể thao",
-      "Đọc truyện",
-      "Tình hình thị trường",
-      "Cập nhật tình hình tàu",
-      "Hiệu quả chuyến đi"
-    ];
-
-    var storageKey = "routine_todo_score_db_v20";
-    var syncUrlKey = "routine_google_sheets_url";
-    var appData = {};
+    let db = null;
+    let isCloudReady = false;
 
     try {
-      var saved = localStorage.getItem(storageKey);
-      if (saved) appData = JSON.parse(saved);
-    } catch(e) { appData = {}; }
-
-    function getTodayStr() {
-      var today = new Date();
-      var y = today.getFullYear();
-      var m = String(today.getMonth() + 1).padStart(2, '0');
-      var d = String(today.getDate()).padStart(2, '0');
-      return y + '-' + m + '-' + d;
-    }
-
-    var currentDate = getTodayStr();
-    var currentFilter = "month";
-    var syncTimer = null;
-
-    function setSyncStatus(text, type) {
-      var el = document.getElementById('syncIndicator');
-      el.innerText = text;
-      el.className = 'sync-status ' + (type === 'ok' ? 'sync-active' : (type === 'loading' ? 'sync-loading' : ''));
-    }
-
-    function configSyncUrl() {
-      var curUrl = localStorage.getItem(syncUrlKey) || '';
-      var newUrl = prompt("Dán Web App URL của Google Apps Script vào đây (chỉ cần dán 1 lần duy nhất):", curUrl);
-      if (newUrl !== null) {
-        localStorage.setItem(syncUrlKey, newUrl.trim());
-        syncFromCloud();
+      if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        isCloudReady = true;
       }
+    } catch(err) {
+      console.warn("Lỗi khởi tạo Firebase:", err);
     }
 
-    // Tự động đẩy lên Google Sheets và Google Calendar khi có thay đổi
-    function triggerCloudSave() {
-      var url = localStorage.getItem(syncUrlKey);
-      if (!url) {
-        setSyncStatus('Lưu máy', '');
-        return;
-      }
+    const EXPENSES_STORAGE_KEY = 'HOI_THAO_VIMC_EXPENSES';
+    const ATHLETES_STORAGE_KEY = 'HOI_THAO_VIMC_ATHLETES';
 
-      setSyncStatus('Đang lưu Sheets & Calendar...', 'loading');
-      clearTimeout(syncTimer);
-      syncTimer = setTimeout(function() {
-        fetch(url, {
-          method: 'POST',
-          body: JSON.stringify(appData)
-        })
-        .then(function(res) { setSyncStatus('Đã đồng bộ Calendar', 'ok'); })
-        .catch(function(err) { setSyncStatus('Lỗi mạng', ''); });
-      }, 1000);
-    }
+    let currentMainTab = 'EXPENSES';
+    let transactions = JSON.parse(localStorage.getItem(EXPENSES_STORAGE_KEY)) || [];
+    let athletes = JSON.parse(localStorage.getItem(ATHLETES_STORAGE_KEY)) || [];
 
-    function syncFromCloud() {
-      var url = localStorage.getItem(syncUrlKey);
-      if (!url) {
-        setSyncStatus('Chưa nối Sheets', '');
-        return;
-      }
-      setSyncStatus('Đang nạp...', 'loading');
-      fetch(url)
-        .then(function(res) { return res.json(); })
-        .then(function(cloudData) {
-          if (cloudData && typeof cloudData === 'object' && Object.keys(cloudData).length > 0) {
-            appData = cloudData;
-            localStorage.setItem(storageKey, JSON.stringify(appData));
-            loadDayData();
-          }
-          setSyncStatus('Đã kết nối', 'ok');
-        })
-        .catch(function(err) {
-          setSyncStatus('Ngoại tuyến', '');
-        });
-    }
+    let currentFilter = 'ALL';
+    let currentAthleteFilter = 'ALL';
+    let currentFiles = [];
 
-    function saveAppData() {
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(appData));
-      } catch(e) {}
-      triggerCloudSave();
-    }
+    const fmt = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
 
-    function switchTab(t) {
-      document.getElementById('view-daily').style.display = (t === 'daily') ? 'block' : 'none';
-      document.getElementById('view-dashboard').style.display = (t === 'dashboard') ? 'block' : 'none';
-      document.getElementById('tab-daily').className = 'tab-btn' + (t === 'daily' ? ' active' : '');
-      document.getElementById('tab-dash').className = 'tab-btn' + (t === 'dashboard' ? ' active' : '');
-      if (t === 'dashboard') renderDashboard();
-    }
+    function switchMainTab(tab) {
+      currentMainTab = tab;
+      const secExp = document.getElementById('sectionExpenses');
+      const secAth = document.getElementById('sectionAthletes');
+      const btnExp = document.getElementById('nav-btn-expenses');
+      const btnAth = document.getElementById('nav-btn-athletes');
 
-    function buildSlotsHTML() {
-      var globalIndex = 0;
-
-      SESSIONS.forEach(function(sess) {
-        var container = document.getElementById(sess.id);
-        container.innerHTML = '';
-
-        sess.slots.forEach(function(slot) {
-          var index = globalIndex++;
-          var row = document.createElement('div');
-          row.className = 'table-row';
-          row.id = 'row-' + index;
-
-          var html = '<div class="time-wrap">';
-          html += '<div class="time-col">' + slot + '</div>';
-          // Nút bật/tắt nhắc nhở cho từng khung giờ
-          html += '<button type="button" id="notif-btn-' + index + '" onclick="toggleSlotReminder(' + index + ')" class="btn-slot-notif">📅 Báo giờ này</button>';
-          html += '</div>';
-
-          // Cột To Do
-          html += '<div class="input-col">';
-          html += '<div style="display:flex; justify-content:space-between; align-items:center;">';
-          html += '<span class="mobile-lbl">To Do:</span>';
-          html += '<select class="quick-select" onchange="pickTodoTemplate(' + index + ', this)">';
-          html += '<option value="">+ Mẫu To Do nhanh...</option>';
-          TODO_TEMPLATES.forEach(function(item) {
-            html += '<option value="' + escapeAttr(item) + '">' + item + '</option>';
-          });
-          html += '</select>';
-          html += '</div>';
-          html += '<textarea class="text-box" id="todo-' + index + '" placeholder="Điền việc cần làm..." oninput="onInputChanged(' + index + ')"></textarea>';
-          html += '</div>';
-
-          // Cột Thực hiện
-          html += '<div class="input-col">';
-          html += '<div style="display:flex; justify-content:space-between; align-items:center;">';
-          html += '<span class="mobile-lbl">Thực hiện:</span>';
-          html += '<select class="quick-select" onchange="pickActualTemplate(' + index + ', this)">';
-          html += '<option value="">+ Chọn nhanh kết quả...</option>';
-          html += '<option value="Đã thực hiện">Đã thực hiện</option>';
-          html += '<option value="Chưa thực hiện vì lý do sau: ">Chưa thực hiện vì lý do sau: ...</option>';
-          html += '<option value="Đang làm">Đang làm</option>';
-          html += '</select>';
-          html += '</div>';
-          html += '<textarea class="text-box" id="actual-' + index + '" placeholder="Điền kết quả thực tế..." oninput="onInputChanged(' + index + ')"></textarea>';
-          html += '</div>';
-
-          // Cột Chấm điểm: 1, 0,5, 0 (Mặc định 0,5)
-          html += '<div class="input-col">';
-          html += '<span class="mobile-lbl">Chấm điểm:</span>';
-          html += '<div class="score-wrap">';
-          html += '<button type="button" class="sc-btn" id="sc-' + index + '-1" onclick="setRowScore(' + index + ', 1)">1</button>';
-          html += '<button type="button" class="sc-btn active-05" id="sc-' + index + '-05" onclick="setRowScore(' + index + ', 0.5)">0,5</button>';
-          html += '<button type="button" class="sc-btn" id="sc-' + index + '-0" onclick="setRowScore(' + index + ', 0)">0</button>';
-          html += '</div>';
-          html += '</div>';
-
-          row.innerHTML = html;
-          container.appendChild(row);
-        });
-      });
-    }
-
-    function escapeAttr(str) { return str.replace(/"/g, '&quot;'); }
-
-    // Bật / Tắt nhắc nhở cho từng khung giờ
-    function toggleSlotReminder(index) {
-      var slot = ALL_SLOTS[index];
-      if (!appData[currentDate]) appData[currentDate] = {};
-      if (!appData[currentDate][slot]) appData[currentDate][slot] = { todo: '', actual: '', score: 0.5, notify: false };
-
-      var curState = appData[currentDate][slot].notify === true;
-      appData[currentDate][slot].notify = !curState;
-
-      updateSlotNotifButton(index, !curState);
-      saveAppData();
-    }
-
-    function updateSlotNotifButton(index, isActive) {
-      var btn = document.getElementById('notif-btn-' + index);
-      if (!btn) return;
-      if (isActive) {
-        btn.className = 'btn-slot-notif active';
-        btn.innerText = '🔕 Đang hẹn báo';
+      if (tab === 'EXPENSES') {
+        if (secExp) secExp.classList.remove('hidden');
+        if (secAth) secAth.classList.add('hidden');
+        if (btnExp) btnExp.classList.add('nav-btn-active');
+        if (btnAth) btnAth.classList.remove('nav-btn-active');
+        renderExpenses();
       } else {
-        btn.className = 'btn-slot-notif';
-        btn.innerText = '📅 Báo giờ này';
+        if (secExp) secExp.classList.add('hidden');
+        if (secAth) secAth.classList.remove('hidden');
+        if (btnExp) btnExp.classList.remove('nav-btn-active');
+        if (btnAth) btnAth.classList.add('nav-btn-active');
+        renderAthletes();
       }
     }
 
-    // Bật hoặc Tắt toàn bộ 10 khung giờ cùng lúc
-    function toggleAllReminders(status) {
-      if (!appData[currentDate]) appData[currentDate] = {};
-      ALL_SLOTS.forEach(function(slot, index) {
-        if (!appData[currentDate][slot]) appData[currentDate][slot] = { todo: '', actual: '', score: 0.5, notify: status };
-        appData[currentDate][slot].notify = status;
-        updateSlotNotifButton(index, status);
-      });
-      saveAppData();
+    function updateCloudBadge(status, text) {
+      const badgeMobile = document.getElementById('cloudBadge');
+      const badgeDesktop = document.getElementById('cloudBadgeDesktop');
+      const colors = {
+        success: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
+        warning: 'bg-amber-500/20 text-amber-200 border-amber-400/30',
+        error: 'bg-rose-500/20 text-rose-200 border-rose-400/30'
+      };
+      const dotColors = {
+        success: 'bg-emerald-400',
+        warning: 'bg-amber-400',
+        error: 'bg-rose-400'
+      };
+
+      if (badgeMobile) {
+        badgeMobile.className = `text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 sm:hidden border ${colors[status]}`;
+        badgeMobile.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${dotColors[status]}"></span> ${text}`;
+      }
+      if (badgeDesktop) {
+        badgeDesktop.className = `hidden sm:flex text-xs px-2.5 py-1 rounded-full items-center gap-1.5 border ${colors[status]}`;
+        badgeDesktop.innerHTML = `<span class="w-2 h-2 rounded-full ${dotColors[status]}"></span> ${text}`;
+      }
     }
 
-    function pickTodoTemplate(index, selectEl) {
-      var val = selectEl.value;
-      if (!val) return;
-      var target = document.getElementById('todo-' + index);
-      
-      var raw = target.value.split(String.fromCharCode(92) + "n").join(String.fromCharCode(10)).trim();
-      var newline = String.fromCharCode(10);
-      var formattedItem = "- " + val;
-
-      if (raw === "") {
-        target.value = formattedItem;
+    // ==================== PHẦN CHI PHÍ ====================
+    function toggleExpenseBreakdown() {
+      const breakdown = document.getElementById('expenseBreakdown');
+      const chevron = document.getElementById('expenseChevron');
+      if (!breakdown) return;
+      const isHidden = breakdown.classList.contains('hidden');
+      if (isHidden) {
+        breakdown.classList.remove('hidden');
+        if (chevron) chevron.style.transform = 'rotate(180deg)';
       } else {
-        target.value = raw + newline + formattedItem;
-      }
-      
-      selectEl.value = "";
-      onInputChanged(index);
-    }
-
-    function pickActualTemplate(index, selectEl) {
-      var val = selectEl.value;
-      if (!val) return;
-      var target = document.getElementById('actual-' + index);
-      target.value = val;
-      target.focus();
-      selectEl.value = "";
-      onInputChanged(index);
-    }
-
-    function loadDayData() {
-      document.getElementById('datePicker').value = currentDate;
-      var d = new Date(currentDate);
-      var days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-      document.getElementById('dayBadgeText').innerText = days[d.getDay()] || '';
-
-      var daySlots = appData[currentDate] || {};
-      ALL_SLOTS.forEach(function(slot, index) {
-        // Mặc định 0.5 điểm
-        var item = daySlots[slot] || { todo: '', actual: '', score: 0.5, notify: false };
-        var cleanTodo = (item.todo || '').split(String.fromCharCode(92) + "n").join(String.fromCharCode(10));
-        document.getElementById('todo-' + index).value = cleanTodo;
-        document.getElementById('actual-' + index).value = item.actual || '';
-        
-        var s = (item.score !== undefined && item.score !== null) ? parseFloat(item.score) : 0.5;
-        updateScoreButtons(index, s);
-        updateSlotNotifButton(index, item.notify === true);
-      });
-    }
-
-    function updateScoreButtons(index, scoreVal) {
-      var s = (scoreVal !== undefined && scoreVal !== null) ? parseFloat(scoreVal) : 0.5;
-      document.getElementById('sc-' + index + '-1').className = 'sc-btn' + (s === 1 ? ' active-1' : '');
-      document.getElementById('sc-' + index + '-05').className = 'sc-btn' + (s === 0.5 ? ' active-05' : '');
-      document.getElementById('sc-' + index + '-0').className = 'sc-btn' + (s === 0 ? ' active-0' : '');
-    }
-
-    function onInputChanged(index) {
-      var slot = ALL_SLOTS[index];
-      var todoVal = document.getElementById('todo-' + index).value;
-      var actualVal = document.getElementById('actual-' + index).value;
-
-      if (!appData[currentDate]) appData[currentDate] = {};
-      if (!appData[currentDate][slot]) appData[currentDate][slot] = { todo: '', actual: '', score: 0.5, notify: false };
-
-      appData[currentDate][slot].todo = todoVal;
-      appData[currentDate][slot].actual = actualVal;
-
-      saveAppData();
-    }
-
-    function setRowScore(index, scoreVal) {
-      var slot = ALL_SLOTS[index];
-      var todoVal = document.getElementById('todo-' + index).value;
-      var actualVal = document.getElementById('actual-' + index).value;
-      var notifyVal = (appData[currentDate] && appData[currentDate][slot] && appData[currentDate][slot].notify === true);
-
-      if (!appData[currentDate]) appData[currentDate] = {};
-      appData[currentDate][slot] = { todo: todoVal, actual: actualVal, score: scoreVal, notify: notifyVal };
-
-      updateScoreButtons(index, scoreVal);
-      saveAppData();
-    }
-
-    function openResultModal() {
-      var daySlots = appData[currentDate] || {};
-      var totalScore = 0;
-      var todoCount = 0;
-      var count1 = 0;
-      var count05 = 0;
-      var count0 = 0;
-
-      ALL_SLOTS.forEach(function(slot) {
-        var item = daySlots[slot];
-        if (item && item.todo && item.todo.trim() !== '') {
-          todoCount++;
-          var s = (item.score !== undefined && item.score !== null) ? parseFloat(item.score) : 0.5;
-          totalScore += s;
-          if (s === 1) count1++;
-          else if (s === 0.5) count05++;
-          else count0++;
-        }
-      });
-
-      var card = document.getElementById('modalCardContent');
-      var lvl = document.getElementById('modalCardLevel');
-      var sc = document.getElementById('modalCardScore');
-      var al = document.getElementById('modalCardAlert');
-      var bk = document.getElementById('modalStatsBreakdown');
-
-      sc.innerText = totalScore.toFixed(1) + " đ";
-
-      card.className = "res-card-content ";
-      if (totalScore >= 8.0) {
-        card.className += "res-card-green";
-        lvl.innerText = "TỪ 8 ĐIỂM TRỞ LÊN (XUẤT SẮC)";
-        al.style.display = "none";
-      } else if (totalScore >= 6.0) {
-        card.className += "res-card-orange";
-        lvl.innerText = "TỪ 6 ĐẾN DƯỚI 8 ĐIỂM (CẦN CỐ GẮNG)";
-        al.style.display = "none";
-      } else {
-        card.className += "res-card-red";
-        lvl.innerText = "DƯỚI 6 ĐIỂM (KHÔNG ĐẠT)";
-        al.style.display = "inline-block";
-      }
-
-      bk.innerHTML = "<div>• Ngày đánh giá: <strong>" + currentDate + "</strong></div>" +
-                     "<div>• Số khung giờ có việc To Do: <strong>" + todoCount + " / 10</strong></div>" +
-                     "<div>• Hoàn thành hết (1 điểm): <strong>" + count1 + " việc</strong></div>" +
-                     "<div>• Làm được 1/2 (0.5 điểm): <strong>" + count05 + " việc</strong></div>" +
-                     "<div>• Không làm (0 điểm): <strong>" + count0 + " việc</strong></div>";
-
-      document.getElementById('resultModal').style.display = 'flex';
-    }
-
-    function closeResultModal() {
-      document.getElementById('resultModal').style.display = 'none';
-    }
-
-    function changeDay(delta) {
-      var d = new Date(currentDate);
-      d.setDate(d.getDate() + delta);
-      var y = d.getFullYear();
-      var m = String(d.getMonth() + 1).padStart(2, '0');
-      var day = String(d.getDate()).padStart(2, '0');
-      currentDate = y + '-' + m + '-' + day;
-      loadDayData();
-    }
-
-    function onDateChange(val) {
-      if (val) {
-        currentDate = val;
-        loadDayData();
+        breakdown.classList.add('hidden');
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
       }
     }
 
-    // DASHBOARD & PHÂN TÍCH
-    function setFilter(f) {
-      currentFilter = f;
-      document.getElementById('f-month').className = 'filter-btn ' + (f === 'month' ? 'active' : '');
-      document.getElementById('f-quarter').className = 'filter-btn ' + (f === 'quarter' ? 'active' : '');
-      document.getElementById('f-all').className = 'filter-btn ' + (f === 'all' ? 'active' : '');
-      renderDashboard();
-    }
+    function calculateSummary() {
+      let totalAdvance = 0, totalExpense = 0, fbExpense = 0, pbExpense = 0, otherExpense = 0;
 
-    function renderDashboard() {
-      var allDates = Object.keys(appData).sort();
-      var curD = new Date(currentDate);
-      var y = curD.getFullYear();
-      var m = curD.getMonth();
-      var q = Math.floor(m / 3) + 1;
-
-      var filterLabel = '';
-      var filteredDates = [];
-
-      if (currentFilter === 'month') {
-        filterLabel = 'Tháng ' + (m + 1) + '/' + y;
-        filteredDates = allDates.filter(function(d) {
-          var dt = new Date(d);
-          return dt.getFullYear() === y && dt.getMonth() === m;
-        });
-      } else if (currentFilter === 'quarter') {
-        filterLabel = 'Quý ' + q + '/' + y + ' (Tháng ' + ((q-1)*3 + 1) + ' - ' + (q*3) + ')';
-        filteredDates = allDates.filter(function(d) {
-          var dt = new Date(d);
-          var dq = Math.floor(dt.getMonth() / 3) + 1;
-          return dt.getFullYear() === y && dq === q;
-        });
-      } else {
-        filterLabel = 'Toàn bộ lịch sử';
-        filteredDates = allDates;
-      }
-
-      document.getElementById('filterLabel').innerText = filterLabel;
-
-      var greenCount = 0;
-      var orangeCount = 0;
-      var redCount = 0;
-      var totalActiveDays = 0;
-      var scoreSum = 0;
-      var rows = [];
-
-      filteredDates.forEach(function(dStr) {
-        var daySlots = appData[dStr] || {};
-        var dayScore = 0;
-        var todoCount = 0;
-
-        ALL_SLOTS.forEach(function(slot) {
-          var it = daySlots[slot];
-          if (it && it.todo && it.todo.trim() !== '') {
-            todoCount++;
-            var s = (it.score !== undefined && it.score !== null) ? parseFloat(it.score) : 0.5;
-            dayScore += s;
-          }
-        });
-
-        if (todoCount > 0) {
-          totalActiveDays++;
-          scoreSum += dayScore;
-
-          var st = '';
-          var colorClass = '';
-          if (dayScore >= 8.0) {
-            greenCount++;
-            st = 'Xanh (>=8đ)';
-            colorClass = 'dash-badge res-card-green';
-          } else if (dayScore >= 6.0) {
-            orangeCount++;
-            st = 'Cam (6-8đ)';
-            colorClass = 'dash-badge res-card-orange';
-          } else {
-            redCount++;
-            st = 'Đỏ (<6đ)';
-            colorClass = 'dash-badge res-card-red';
-          }
-
-          var dayName = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][new Date(dStr).getDay()];
-          rows.push({
-            date: dStr,
-            day: dayName,
-            todoCount: todoCount,
-            score: dayScore,
-            status: st,
-            colorClass: colorClass
-          });
-        }
-      });
-
-      document.getElementById('totalDays').innerText = totalActiveDays;
-      document.getElementById('greenDays').innerText = greenCount;
-      document.getElementById('orangeDays').innerText = orangeCount;
-      document.getElementById('redDays').innerText = redCount;
-
-      var analysisEl = document.getElementById('analysisContent');
-      var adviceEl = document.getElementById('adviceCard');
-
-      if (totalActiveDays === 0) {
-        analysisEl.innerHTML = 'Chưa có ngày nào có công việc To Do trong giai đoạn <strong>' + filterLabel + '</strong>.';
-        adviceEl.className = 'advice-card adv-orange';
-        adviceEl.innerText = '💡 Hãy quay lại tab "Lịch & Chấm Điểm Hằng Ngày" để điền To Do cho ngày hôm nay!';
-      } else {
-        var avg = (scoreSum / totalActiveDays).toFixed(1);
-        var gPct = Math.round((greenCount / totalActiveDays) * 100);
-        var rPct = Math.round((redCount / totalActiveDays) * 100);
-
-        var txt = '<p>Trong <strong>' + filterLabel + '</strong>, bạn đã theo dõi <strong>' + totalActiveDays + ' ngày</strong> có kế hoạch làm việc:</p>';
-        txt += '<p>• Điểm số trung bình: <strong>' + avg + ' / 10 điểm</strong>.</p>';
-        txt += '<p>• Số ngày đạt Xanh (>=8đ): <strong>' + greenCount + ' ngày</strong> (' + gPct + '%).</p>';
-        txt += '<p>• Số ngày Cam (6 - dưới 8đ): <strong>' + orangeCount + ' ngày</strong>.</p>';
-        txt += '<p>• Số ngày Đỏ cảnh báo (<6đ): <strong>' + redCount + ' ngày</strong> (' + rPct + '%).</p>';
-
-        analysisEl.innerHTML = txt;
-
-        if (gPct >= 70 && redCount === 0) {
-          adviceEl.className = 'advice-card adv-green';
-          adviceEl.innerHTML = '🌟 <strong>Khen ngợi:</strong> Hiệu suất làm việc cực kỳ xuất sắc và kỷ luật! Bạn duy trì các khung giờ rất ổn định. Tiếp tục phát huy nhé!';
-        } else if (gPct >= 50) {
-          adviceEl.className = 'advice-card adv-orange';
-          adviceEl.innerHTML = '⚠️ <strong>Lời khuyên:</strong> Phong độ đạt mức Khá nhưng chưa thật sự đồng đều, vẫn còn ngày bị tụt điểm (Đỏ/Cam). Hãy rà soát lại các khung giờ tối (20:00-23:00) hoặc buổi chiều để tránh bị việc đột xuất làm gãy mạch công việc.';
+      transactions.forEach(t => {
+        const amt = Number(t.amount) || 0;
+        if (t.type === 'ADVANCE') {
+          totalAdvance += amt;
         } else {
-          adviceEl.className = 'advice-card adv-red';
-          adviceEl.innerHTML = '🚨 <strong>CẢNH BÁO:</strong> Tỷ lệ ngày Đỏ chiếm khá cao (' + rPct + '%). Nhiều công việc bị dở dang hoặc chưa thực hiện. <strong>Lời khuyên:</strong> Đừng lên kế hoạch quá dàn trải cả 10 khung giờ. Hãy ưu tiên tập trung dứt điểm 6-8 đầu việc thực sự quan trọng trước để nâng cao tỷ lệ 1 điểm!';
+          totalExpense += amt;
+          if (t.category === 'Bóng đá') fbExpense += amt;
+          else if (t.category === 'Pickleball') pbExpense += amt;
+          else otherExpense += amt;
         }
-      }
+      });
 
-      var tbody = document.getElementById('dashTableBody');
-      tbody.innerHTML = '';
-      if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:16px;">Chưa có dữ liệu.</td></tr>';
-      } else {
-        rows.reverse().forEach(function(r) {
-          var tr = document.createElement('tr');
-          tr.innerHTML = '<td><strong>' + r.date + '</strong></td>' +
-                         '<td>' + r.day + '</td>' +
-                         '<td>' + r.todoCount + ' khung giờ</td>' +
-                         '<td><strong style="font-family:monospace; font-size:14px;">' + r.score.toFixed(1) + ' đ</strong></td>' +
-                         '<td><span class="' + r.colorClass + '">' + r.status + '</span></td>';
-          tbody.appendChild(tr);
-        });
+      if (document.getElementById('totalAdvance')) document.getElementById('totalAdvance').textContent = fmt(totalAdvance);
+      if (document.getElementById('totalExpense')) document.getElementById('totalExpense').textContent = fmt(totalExpense);
+      if (document.getElementById('footballExpense')) document.getElementById('footballExpense').textContent = fmt(fbExpense);
+      if (document.getElementById('pickleballExpense')) document.getElementById('pickleballExpense').textContent = fmt(pbExpense);
+      if (document.getElementById('otherExpense')) document.getElementById('otherExpense').textContent = fmt(otherExpense);
+      
+      const remaining = totalAdvance - totalExpense;
+      const remEl = document.getElementById('remainingFund');
+      if (remEl) {
+        remEl.textContent = fmt(remaining);
+        remEl.className = remaining < 0 ? 'text-2xl sm:text-3xl font-extrabold mt-0.5 text-rose-300' : 'text-2xl sm:text-3xl font-extrabold mt-0.5 text-white';
       }
     }
 
-    window.onload = function() {
-      buildSlotsHTML();
-      loadDayData();
-      syncFromCloud();
-    };
+    function renderExpenses() {
+      calculateSummary();
+      const tbodyDesktop = document.getElementById('txTableDesktop');
+      const listMobile = document.getElementById('txListMobile');
+      const emptyState = document.getElementById('emptyState');
+
+      if (!tbodyDesktop || !listMobile) return;
+
+      const filtered = transactions.filter(t => currentFilter === 'ALL' || t.category === currentFilter);
+      tbodyDesktop.innerHTML = '';
+      listMobile.innerHTML = '';
+
+      if (filtered.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+      } else {
+        if (emptyState) emptyState.classList.add('hidden');
+      }
+
+      filtered.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+      filtered.forEach(item => {
+        const isExp = item.type === 'EXPENSE';
+        const typeBadge = isExp 
+          ? '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-100">Chi</span>'
+          : '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">Tạm ứng</span>';
+
+        const catIcon = item.category === 'Bóng đá' ? '⚽ Bóng đá' : item.category === 'Pickleball' ? '🏓 Pickleball' : '📋 Khác';
+        const catBadge = `<span class="text-xs px-2 py-0.5 rounded-full font-medium ${
+          item.category === 'Bóng đá' ? 'bg-amber-100 text-amber-800' : 
+          item.category === 'Pickleball' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-700'
+        }">${catIcon}</span>`;
+
+        const files = item.files || [];
+        const fileBadgesHtml = files.length > 0 
+          ? `<div class="flex flex-wrap gap-1">
+              ${files.map((f, i) => `
+                <button onclick="previewFile('${item.id}',${i})" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-100 hover:bg-blue-100 border border-slate-200 rounded text-[11px] text-slate-700 truncate max-w-[90px]" title="${f.name}">
+                  ${f.type && f.type.startsWith('image') ? '🖼️' : (f.type && f.type.includes('pdf')) ? '📄' : '📝'} <span class="truncate">${f.name}</span>
+                </button>
+              `).join('')}
+            </div>`
+          : `<span class="text-slate-300 text-xs italic">Không có</span>`;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/70 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 text-slate-500 font-mono text-xs">${item.date || '-'}</td>
+          <td class="py-3 px-4">${typeBadge}</td>
+          <td class="py-3 px-4">${catBadge}</td>
+          <td class="py-3 px-4 font-medium text-slate-800">${item.description || '-'}</td>
+          <td class="py-3 px-4 text-slate-600">${item.person || '-'}</td>
+          <td class="py-3 px-4">${fileBadgesHtml}</td>
+          <td class="py-3 px-4 text-right font-semibold ${isExp ? 'text-rose-600' : 'text-emerald-600'}">
+            ${isExp ? '-' : '+'}${fmt(item.amount || 0)}
+          </td>
+          <td class="py-3 px-4 text-center">
+            <div class="flex items-center justify-center gap-1.5">
+              <button onclick="editTx('${item.id}')" class="text-blue-600 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50">✏️ Sửa</button>
+              <button onclick="deleteTx('${item.id}')" class="text-rose-600 font-medium text-xs px-2 py-1 rounded hover:bg-rose-50">🗑️ Xoá</button>
+            </div>
+          </td>
+        `;
+        tbodyDesktop.appendChild(tr);
+
+        const card = document.createElement('div');
+        card.className = 'p-3.5 flex flex-col gap-2 hover:bg-slate-50';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">${typeBadge} ${catBadge}</div>
+            <span class="text-xs font-mono text-slate-400">${item.date || '-'}</span>
+          </div>
+          <div class="flex justify-between items-start mt-0.5">
+            <div class="pr-2">
+              <p class="font-medium text-slate-800 text-sm leading-tight">${item.description || '-'}</p>
+              <p class="text-xs text-slate-500 mt-1">Chi cho: <span class="text-slate-700 font-medium">${item.person || '-'}</span></p>
+            </div>
+            <span class="font-bold text-sm whitespace-nowrap text-right ${isExp ? 'text-rose-600' : 'text-emerald-600'}">
+              ${isExp ? '-' : '+'}${fmt(item.amount || 0)}
+            </span>
+          </div>
+          ${files.length > 0 ? `
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              ${files.map((f, i) => `
+                <button onclick="previewFile('${item.id}', ${i})" class="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-700 max-w-[140px] truncate">
+                  ${f.type && f.type.startsWith('image') ? '🖼️' : (f.type && f.type.includes('pdf')) ? '📄' : '📝'} <span class="truncate">${f.name}</span>
+                </button>
+              `).join('')}
+            </div>` : ''}
+          <div class="flex justify-end gap-3 pt-2 border-t border-slate-100 mt-1">
+            <button onclick="editTx('${item.id}')" class="text-xs text-blue-600 font-medium">✏️ Sửa</button>
+            <span class="text-slate-300">|</span>
+            <button onclick="deleteTx('${item.id}')" class="text-xs text-rose-600 font-medium">🗑️ Xoá</button>
+          </div>
+        `;
+        listMobile.appendChild(card);
+      });
+    }
+
+    function filterCategory(cat) {
+      currentFilter = cat;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+      const activeBtn = document.getElementById(`tab-${cat}`);
+      if (activeBtn) activeBtn.classList.add('tab-active');
+      renderExpenses();
+    }
+
+    function openModal() {
+      document.getElementById('txId').value = '';
+      document.getElementById('txType').value = 'EXPENSE';
+      document.getElementById('txCategory').value = 'Bóng đá';
+      document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('txPerson').value = '';
+      document.getElementById('txDescription').value = '';
+      document.getElementById('txAmount').value = '';
+      document.getElementById('modalTitle').textContent = 'Thêm Khoản Giao Dịch';
+      document.getElementById('submitBtn').textContent = 'Lưu Dữ Liệu';
+      currentFiles = [];
+      renderPendingFiles();
+      const modal = document.getElementById('modalForm');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modalForm');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function editTx(id) {
+      const item = transactions.find(t => t.id === id);
+      if (!item) return;
+
+      document.getElementById('txId').value = item.id;
+      document.getElementById('txType').value = item.type;
+      document.getElementById('txCategory').value = item.category;
+      document.getElementById('txDate').value = item.date;
+      document.getElementById('txPerson').value = item.person;
+      document.getElementById('txDescription').value = item.description;
+      document.getElementById('txAmount').value = item.amount;
+
+      currentFiles = item.files ? [...item.files] : [];
+      renderPendingFiles();
+
+      document.getElementById('modalTitle').textContent = 'Chỉnh Sửa Giao Dịch';
+      document.getElementById('submitBtn').textContent = 'Cập Nhật';
+      const modal = document.getElementById('modalForm');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function compressImage(file) {
+      return new Promise((resolve) => {
+        if (!file.type.startsWith('image/')) {
+          if (file.size > 800 * 1024) {
+            alert(`File "${file.name}" quá lớn (>800KB).`);
+            return resolve(null);
+          }
+          const reader = new FileReader();
+          reader.onload = (e) => resolve({ dataUrl: e.target.result, name: file.name, type: file.type });
+          reader.readAsDataURL(file);
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 700;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            resolve({ dataUrl: compressedDataUrl, name: file.name, type: 'image/jpeg' });
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleFileSelection(event) {
+      const selectedFiles = Array.from(event.target.files);
+      const remainingSlots = 10 - currentFiles.length;
+
+      if (remainingSlots <= 0) {
+        alert('Tối đa 10 tệp đính kèm!');
+        return;
+      }
+
+      const filesToAdd = selectedFiles.slice(0, remainingSlots);
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang đọc tệp...';
+
+      for (let file of filesToAdd) {
+        const processed = await compressImage(file);
+        if (processed) currentFiles.push(processed);
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = document.getElementById('txId').value ? 'Cập Nhật' : 'Lưu Dữ Liệu';
+      renderPendingFiles();
+      event.target.value = '';
+    }
+
+    function removePendingFile(idx) {
+      currentFiles.splice(idx, 1);
+      renderPendingFiles();
+    }
+
+    function renderPendingFiles() {
+      const listEl = document.getElementById('pendingFileList');
+      const countEl = document.getElementById('fileCountBadge');
+      if (!listEl || !countEl) return;
+      listEl.innerHTML = '';
+      countEl.textContent = `${currentFiles.length}/10 tệp`;
+
+      currentFiles.forEach((file, idx) => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between bg-slate-100 px-3 py-1.5 rounded text-xs border border-slate-200';
+        div.innerHTML = `
+          <div class="flex items-center gap-2 truncate pr-2">
+            <span>${file.type && file.type.startsWith('image') ? '🖼️' : (file.type && file.type.includes('pdf')) ? '📄' : '📝'}</span>
+            <span class="truncate font-medium text-slate-700">${file.name}</span>
+          </div>
+          <button type="button" onclick="removePendingFile(${idx})" class="text-rose-500 hover:text-rose-700 font-bold px-1.5">&times;</button>
+        `;
+        listEl.appendChild(div);
+      });
+    }
+
+    function saveDataNow() {
+      const editId = document.getElementById('txId').value;
+      const date = document.getElementById('txDate').value;
+      const person = document.getElementById('txPerson').value.trim();
+      const description = document.getElementById('txDescription').value.trim();
+      const amount = Number(document.getElementById('txAmount').value);
+      const type = document.getElementById('txType').value;
+      const category = document.getElementById('txCategory').value;
+
+      if (!date || !person || !description || !amount || amount <= 0) {
+        alert("Vui lòng điền đầy đủ: Ngày, người nhận, nội dung và số tiền (>0đ)!");
+        return;
+      }
+
+      const txItem = {
+        id: editId || Date.now().toString(),
+        type, category, date, person, description, amount,
+        files: currentFiles || []
+      };
+
+      if (editId) {
+        const idx = transactions.findIndex(t => t.id === editId);
+        if (idx !== -1) transactions[idx] = txItem;
+      } else {
+        transactions.unshift(txItem);
+      }
+      localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(transactions));
+      renderExpenses();
+      closeModal();
+
+      if (isCloudReady && db) {
+        db.collection("expenses").doc(txItem.id).set(txItem)
+          .then(() => updateCloudBadge('success', 'Đã đồng bộ'))
+          .catch(err => console.error("Lỗi sync Cloud chi phí:", err));
+      }
+    }
+
+    function deleteTx(id) {
+      const item = transactions.find(t => t.id === id);
+      const desc = item ? item.description : 'mục này';
+      if (confirm(`Bạn có chắc muốn xoá khoản "${desc}"?`)) {
+        transactions = transactions.filter(t => t.id !== id);
+        localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(transactions));
+        renderExpenses();
+
+        if (isCloudReady && db) {
+          db.collection("expenses").doc(id).delete().catch(e => console.error("Lỗi xóa cloud:", e));
+        }
+      }
+    }
+
+    // ==================== PHẦN VẬN ĐỘNG VIÊN: 3 TAB DUY NHẤT ====================
+    function selectAthleteFilter(cat) {
+      currentAthleteFilter = cat;
+      document.querySelectorAll('.tabAth-btn').forEach(b => b.classList.remove('tab-active'));
+      const activeBtn = document.getElementById(`tabAth-${cat}`);
+      if (activeBtn) activeBtn.classList.add('tab-active');
+      renderAthletes();
+    }
+
+    function handleSportChange() {
+      const sportEl = document.getElementById('athCategory');
+      const pbBox = document.getElementById('pickleballEventsBox');
+      if (!sportEl || !pbBox) return;
+      if (sportEl.value === 'Bóng đá') {
+        pbBox.classList.add('hidden');
+      } else {
+        pbBox.classList.remove('hidden');
+      }
+    }
+
+    // Lấy danh sách nội dung thi đấu hiển thị
+    function getDisplayEvents(ath) {
+      if (!ath) return [];
+      let list = [];
+      if (Array.isArray(ath.events)) {
+        list = ath.events;
+      } else if (typeof ath.events === 'string' && ath.events.trim()) {
+        list = ath.events.split(/[,;+]/);
+      } else if (typeof ath.event === 'string' && ath.event.trim()) {
+        list = ath.event.split(/[,;+]/);
+      }
+
+      // Chuẩn hóa tên nhãn hiển thị
+      return list.map(item => {
+        let str = String(item).trim();
+        if (str === 'doi_nam_nu' || str.toLowerCase().includes('nam nữ') || str.toLowerCase().includes('nam nu')) return 'Đôi nam nữ';
+        if (str === 'doi_nu' || str.toLowerCase().includes('đôi nữ') || str.toLowerCase().includes('doi nu')) return 'Đôi nữ';
+        if (str === 'doi_nam' || str.toLowerCase().includes('đôi nam') || str.toLowerCase().includes('doi nam')) return 'Đôi nam';
+        if (str === 'don_nam' || str.toLowerCase().includes('đơn nam')) return 'Đơn nam';
+        if (str === 'don_nu' || str.toLowerCase().includes('đơn nữ')) return 'Đơn nữ';
+        return str;
+      }).filter(Boolean);
+    }
+
+    function renderAthletes() {
+      const tbody = document.getElementById('athleteTableDesktop');
+      const mobileList = document.getElementById('athleteListMobile');
+      const emptyState = document.getElementById('athleteEmptyState');
+
+      if (!tbody || !mobileList) return;
+
+      // 1. Thống kê quân số duy nhất dựa theo mã BHXH
+      const allUniqueInsurances = new Set();
+      const footballInsurances = new Set();
+      const pickleballInsurances = new Set();
+
+      athletes.forEach((a, idx) => {
+        if (!a) return;
+        const rawIns = (a.insurance !== undefined && a.insurance !== null) ? String(a.insurance).trim().toLowerCase() : '';
+        const uid = rawIns.length > 0 ? rawIns : `ath_temp_${a.id || idx}`;
+        allUniqueInsurances.add(uid);
+
+        const sport = a.category || 'Pickleball';
+        if (sport === 'Bóng đá' || sport === 'Cả 2 môn') {
+          footballInsurances.add(uid);
+        }
+        if (sport === 'Pickleball' || sport === 'Cả 2 môn') {
+          pickleballInsurances.add(uid);
+        }
+      });
+
+      if (document.getElementById('statTotalAthletes')) document.getElementById('statTotalAthletes').textContent = allUniqueInsurances.size;
+      if (document.getElementById('statFootballAthletes')) document.getElementById('statFootballAthletes').textContent = footballInsurances.size;
+      if (document.getElementById('statPickleballAthletes')) document.getElementById('statPickleballAthletes').textContent = pickleballInsurances.size;
+      if (document.getElementById('athleteCountHeader')) document.getElementById('athleteCountHeader').textContent = allUniqueInsurances.size;
+
+      // 2. Lọc danh sách cực kỳ đơn giản & không bao giờ lỗi
+      const filtered = athletes.filter(a => {
+        if (!a) return false;
+        if (currentAthleteFilter === 'ALL') return true;
+
+        const sport = a.category || 'Pickleball';
+        if (currentAthleteFilter === 'Bóng đá') {
+          return sport === 'Bóng đá' || sport === 'Cả 2 môn';
+        }
+        if (currentAthleteFilter === 'Pickleball') {
+          return sport === 'Pickleball' || sport === 'Cả 2 môn';
+        }
+        return true;
+      });
+
+      tbody.innerHTML = '';
+      mobileList.innerHTML = '';
+
+      if (filtered.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+      } else {
+        if (emptyState) emptyState.classList.add('hidden');
+      }
+
+      const currentYear = new Date().getFullYear();
+
+      // 3. Render danh sách
+      filtered.forEach((ath, idx) => {
+        const athId = String(ath.id || idx);
+        const athName = ath.name || 'Chưa đặt tên';
+        const athYear = ath.birthYear ? String(ath.birthYear) : '';
+        const age = athYear ? (currentYear - Number(athYear)) : '-';
+        const athIns = (ath.insurance !== undefined && ath.insurance !== null && String(ath.insurance).trim().length > 0) ? String(ath.insurance) : '-';
+        const athNotes = ath.notes || '-';
+        const sport = ath.category || 'Pickleball';
+        const evList = getDisplayEvents(ath);
+
+        const catBadge = sport === 'Bóng đá' 
+          ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">⚽ Bóng Đá</span>'
+          : sport === 'Pickleball'
+          ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">🏓 Pickleball</span>'
+          : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">⚽ 🏓 Cả 2 môn</span>';
+
+        let eventsBadgesHtml = '';
+        if (sport === 'Bóng đá') {
+          eventsBadgesHtml = '<span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">⚽ Cầu thủ bóng đá</span>';
+        } else if (evList.length > 0) {
+          eventsBadgesHtml = `<div class="flex flex-wrap gap-1">` + evList.map(ev => {
+            if (ev === 'Đôi nam') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">🎾 Đôi Nam</span>';
+            if (ev === 'Đôi nữ') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">👭 Đôi Nữ</span>';
+            if (ev === 'Đôi nam nữ') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">👫 Đôi Nam Nữ</span>';
+            return `<span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">${ev}</span>`;
+          }).join('') + `</div>`;
+        } else {
+          eventsBadgesHtml = '<span class="text-xs text-slate-400 italic">Chưa xếp nội dung</span>';
+        }
+
+        // Bảng Desktop
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-3 text-center font-mono text-xs text-slate-400">${idx + 1}</td>
+          <td class="py-3 px-3 font-bold text-slate-800">${athName}</td>
+          <td class="py-3 px-3">${catBadge}</td>
+          <td class="py-3 px-3">${eventsBadgesHtml}</td>
+          <td class="py-3 px-3 text-slate-700 font-medium">${athYear || '-'} <span class="text-xs text-slate-400">(${age} tuổi)</span></td>
+          <td class="py-3 px-3 font-mono font-semibold text-blue-700">${athIns}</td>
+          <td class="py-3 px-3 text-slate-600 text-xs">${athNotes}</td>
+          <td class="py-3 px-3 text-center">
+            <div class="flex items-center justify-center gap-1.5">
+              <button onclick="editAthlete('${athId}')" class="text-blue-600 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50">✏️ Sửa</button>
+              <button onclick="deleteAthlete('${athId}')" class="text-rose-600 font-medium text-xs px-2 py-1 rounded hover:bg-rose-50">🗑️ Xoá</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+
+        // Mobile Card
+        const card = document.createElement('div');
+        card.className = 'p-3.5 flex flex-col gap-1.5 hover:bg-slate-50';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-sm text-slate-900">${athName}</span>
+            ${catBadge}
+          </div>
+          <div class="flex items-start gap-1.5 mt-0.5">
+            <span class="text-xs text-slate-400 whitespace-nowrap">Nội dung:</span>
+            ${eventsBadgesHtml}
+          </div>
+          <div class="text-xs text-slate-600 space-y-0.5 mt-1">
+            <p><span class="text-slate-400">Năm sinh:</span> <span class="font-semibold text-slate-800">${athYear || '-'}</span> (${age} tuổi)</p>
+            <p><span class="text-slate-400">Số BHXH:</span> <span class="font-mono font-bold text-blue-700">${athIns}</span></p>
+            ${athNotes !== '-' ? `<p><span class="text-slate-400">Ghi chú:</span> ${athNotes}</p>` : ''}
+          </div>
+          <div class="flex justify-end gap-3 pt-2 border-t border-slate-100 mt-1">
+            <button onclick="editAthlete('${athId}')" class="text-xs text-blue-600 font-medium">✏️ Sửa</button>
+            <span class="text-slate-300">|</span>
+            <button onclick="deleteAthlete('${athId}')" class="text-xs text-rose-600 font-medium">🗑️ Xoá</button>
+          </div>
+        `;
+        mobileList.appendChild(card);
+      });
+    }
+
+    function openAthleteModal() {
+      document.getElementById('athId').value = '';
+      document.getElementById('athName').value = '';
+      document.getElementById('athCategory').value = 'Pickleball';
+      handleSportChange();
+      
+      document.querySelectorAll('input[name="pbEvent"]').forEach(cb => cb.checked = false);
+      const defaultCb = document.querySelector('input[name="pbEvent"][value="Đôi nam"]');
+      if (defaultCb) defaultCb.checked = true;
+
+      document.getElementById('athBirthYear').value = '';
+      document.getElementById('athInsurance').value = '';
+      document.getElementById('athNotes').value = '';
+      document.getElementById('athleteModalTitle').textContent = 'Đăng Ký Vận Động Viên';
+      document.getElementById('athSubmitBtn').textContent = 'Lưu VĐV';
+      const modal = document.getElementById('modalAthlete');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeAthleteModal() {
+      const modal = document.getElementById('modalAthlete');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function editAthlete(id) {
+      const a = athletes.find(item => String(item.id) === String(id));
+      if (!a) return;
+
+      document.getElementById('athId').value = a.id;
+      document.getElementById('athName').value = a.name || '';
+      document.getElementById('athCategory').value = a.category || 'Pickleball';
+      handleSportChange();
+
+      const evList = getDisplayEvents(a);
+      document.querySelectorAll('input[name="pbEvent"]').forEach(cb => {
+        cb.checked = evList.includes(cb.value);
+      });
+
+      document.getElementById('athBirthYear').value = a.birthYear || '';
+      document.getElementById('athInsurance').value = a.insurance || '';
+      document.getElementById('athNotes').value = a.notes || '';
+
+      document.getElementById('athleteModalTitle').textContent = 'Chỉnh Sửa Hồ Sơ VĐV';
+      document.getElementById('athSubmitBtn').textContent = 'Cập Nhật';
+      const modal = document.getElementById('modalAthlete');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function saveAthleteNow() {
+      const editId = document.getElementById('athId').value;
+      const name = document.getElementById('athName').value.trim();
+      const category = document.getElementById('athCategory').value;
+      const birthYear = document.getElementById('athBirthYear').value.trim();
+      const insurance = document.getElementById('athInsurance').value.trim();
+      const notes = document.getElementById('athNotes').value.trim();
+
+      const selectedEvents = [];
+      if (category !== 'Bóng đá') {
+        document.querySelectorAll('input[name="pbEvent"]:checked').forEach(cb => {
+          selectedEvents.push(cb.value);
+        });
+        if (selectedEvents.length === 0) {
+          alert("Vui lòng chọn ít nhất một nội dung thi đấu Pickleball!");
+          return;
+        }
+      }
+
+      if (!name) {
+        alert("Vui lòng nhập Họ và Tên VĐV!");
+        return;
+      }
+      if (!birthYear) {
+        alert("Vui lòng nhập Năm sinh của VĐV!");
+        return;
+      }
+      if (!insurance) {
+        alert("Vui lòng nhập Mã số BHXH để phân biệt danh tính!");
+        return;
+      }
+
+      const athItem = {
+        id: editId || Date.now().toString(),
+        name,
+        category,
+        events: selectedEvents,
+        birthYear,
+        insurance,
+        notes
+      };
+
+      if (editId) {
+        const idx = athletes.findIndex(a => String(a.id) === String(editId));
+        if (idx !== -1) athletes[idx] = athItem;
+      } else {
+        athletes.push(athItem);
+      }
+
+      localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
+      renderAthletes();
+      closeAthleteModal();
+
+      if (isCloudReady && db) {
+        db.collection("athletes").doc(athItem.id).set(athItem)
+          .then(() => updateCloudBadge('success', 'Đã đồng bộ'))
+          .catch(err => {
+            console.error("Lỗi sync Cloud VĐV:", err);
+            updateCloudBadge('warning', 'Lưu tạm máy');
+          });
+      }
+    }
+
+    function deleteAthlete(id) {
+      const a = athletes.find(item => String(item.id) === String(id));
+      const name = a ? a.name : 'VĐV này';
+      if (confirm(`Bạn có chắc muốn xoá vận động viên "${name}" khỏi danh sách?`)) {
+        athletes = athletes.filter(item => String(item.id) !== String(id));
+        localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
+        renderAthletes();
+
+        if (isCloudReady && db) {
+          db.collection("athletes").doc(String(id)).delete().catch(e => console.error("Lỗi xóa VĐV cloud:", e));
+        }
+      }
+    }
+
+    function exportCurrentView() {
+      if (currentMainTab === 'EXPENSES') {
+        exportExpensesExcel();
+      } else {
+        exportAthletesExcel();
+      }
+    }
+
+    function exportExpensesExcel() {
+      if (transactions.length === 0) {
+        alert('Chưa có dữ liệu chi tiêu!');
+        return;
+      }
+      const rows = transactions.map((t, idx) => ({
+        'STT': idx + 1,
+        'Ngày': t.date,
+        'Nghiệp Vụ': t.type === 'ADVANCE' ? 'Tạm ứng' : 'Khoản chi',
+        'Bộ Môn': t.category,
+        'Chi Cho Ai': t.person,
+        'Nội Dung': t.description,
+        'Số Tiền (VNĐ)': t.amount,
+        'Số lượng chứng từ': (t.files && t.files.length) ? t.files.length : 0
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Chi_Phi");
+      XLSX.writeFile(wb, `Bao_Cao_Chi_Phi_Hoi_Thao_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function exportAthletesExcel() {
+      if (athletes.length === 0) {
+        alert('Chưa có dữ liệu VĐV!');
+        return;
+      }
+      const currentYear = new Date().getFullYear();
+      const rows = athletes.map((a, idx) => {
+        const evList = getDisplayEvents(a);
+        return {
+          'STT': idx + 1,
+          'Họ Và Tên': a.name || '',
+          'Môn Tham Gia': a.category || '',
+          'Các Nội Dung Thi Đấu': evList.join(', ') || (a.category === 'Bóng đá' ? 'Bóng đá' : ''),
+          'Năm Sinh': a.birthYear || '',
+          'Tuổi': a.birthYear ? (currentYear - Number(a.birthYear)) : '',
+          'Mã Số BHXH': a.insurance || '',
+          'Ghi Chú / Bạn Đôi': a.notes || ''
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Danh_Sach_VDV");
+      XLSX.writeFile(wb, `Danh_Sach_VDV_Hoi_Thao_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function previewFile(txId, idx) {
+      const tx = transactions.find(t => t.id === txId);
+      if (!tx || !tx.files || !tx.files[idx]) return;
+      const file = tx.files[idx];
+      const viewModal = document.getElementById('viewModal');
+      const body = document.getElementById('viewModalBody');
+      const title = document.getElementById('viewModalTitle');
+      const dlBtn = document.getElementById('downloadBtn');
+
+      title.textContent = file.name;
+      dlBtn.href = file.dataUrl;
+      dlBtn.download = file.name;
+
+      if (file.type && file.type.startsWith('image/')) {
+        body.innerHTML = `<img src="${file.dataUrl}" class="max-h-[60vh] max-w-full rounded-lg object-contain shadow-sm">`;
+      } else {
+        body.innerHTML = `
+          <div class="text-center p-4">
+            <p class="text-4xl mb-2">${file.type && file.type.includes('pdf') ? '📄' : '📝'}</p>
+            <p class="font-medium text-xs text-slate-700 mb-2">${file.name}</p>
+            <p class="text-[11px] text-slate-400">Bấm nút bên dưới để tải tệp về xem.</p>
+          </div>
+        `;
+      }
+      viewModal.classList.remove('hidden');
+      viewModal.classList.add('flex');
+    }
+
+    function closeViewModal() {
+      const viewModal = document.getElementById('viewModal');
+      if (viewModal) {
+        viewModal.classList.add('hidden');
+        viewModal.classList.remove('flex');
+      }
+    }
+
+    // ==================== KHỞI CHẠY & REAL-TIME ====================
+    function startApp() {
+      renderExpenses();
+      renderAthletes();
+
+      if (isCloudReady && db) {
+        updateCloudBadge('warning', 'Đang kết nối Cloud...');
+
+        // 1. Lắng nghe chi phí
+        db.collection("expenses").onSnapshot((snapshot) => {
+          const cloudExp = [];
+          snapshot.forEach(doc => cloudExp.push({ id: doc.id, ...doc.data() }));
+          if (cloudExp.length > 0) {
+            transactions = cloudExp;
+            localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(transactions));
+            renderExpenses();
+          }
+          updateCloudBadge('success', 'Đã đồng bộ');
+        }, err => console.warn("Lỗi listener expenses:", err));
+
+        // 2. Lắng nghe vận động viên
+        db.collection("athletes").onSnapshot((snapshot) => {
+          const cloudAth = [];
+          snapshot.forEach(doc => {
+            cloudAth.push({ id: doc.id, ...doc.data() });
+          });
+          athletes = cloudAth;
+          localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
+          renderAthletes();
+          updateCloudBadge('success', 'Đã đồng bộ');
+        }, err => console.warn("Lỗi listener athletes:", err));
+
+      } else {
+        updateCloudBadge('warning', 'Chế độ Local');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', startApp);
   </script>
 </body>
 </html>
