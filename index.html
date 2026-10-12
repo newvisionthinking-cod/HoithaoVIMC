@@ -1249,13 +1249,22 @@
       }
     }
 
-    // ==================== KHỞI CHẠY & REAL-TIME ====================
+   // ==================== KHỞI CHẠY & REAL-TIME ĐỒNG BỘ CHUẨN XÁC ====================
     function startApp() {
       renderExpenses();
       renderAthletes();
 
       if (isCloudReady && db) {
-        updateCloudBadge('warning', 'Đang kết nối Cloud...');
+        updateCloudBadge('warning', 'Đang kết nối...');
+
+        let expensesLoaded = false;
+        let athletesLoaded = false;
+
+        function checkSyncStatus() {
+          if (expensesLoaded || athletesLoaded) {
+            updateCloudBadge('success', 'Đã đồng bộ');
+          }
+        }
 
         // 1. Lắng nghe chi phí
         db.collection("expenses").onSnapshot((snapshot) => {
@@ -1266,8 +1275,12 @@
             localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(transactions));
             renderExpenses();
           }
-          updateCloudBadge('success', 'Đã đồng bộ');
-        }, err => console.warn("Lỗi listener expenses:", err));
+          expensesLoaded = true;
+          checkSyncStatus();
+        }, err => {
+          console.warn("Lỗi listener expenses:", err);
+          updateCloudBadge('warning', 'Ngoại tuyến / Lỗi mạng');
+        });
 
         // 2. Lắng nghe vận động viên
         db.collection("athletes").onSnapshot((snapshot) => {
@@ -1275,11 +1288,17 @@
           snapshot.forEach(doc => {
             cloudAth.push({ id: doc.id, ...doc.data() });
           });
-          athletes = cloudAth;
-          localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
-          renderAthletes();
-          updateCloudBadge('success', 'Đã đồng bộ');
-        }, err => console.warn("Lỗi listener athletes:", err));
+          if (cloudAth.length > 0) {
+            athletes = cloudAth;
+            localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
+            renderAthletes();
+          }
+          athletesLoaded = true;
+          checkSyncStatus();
+        }, err => {
+          console.warn("Lỗi listener athletes:", err);
+          updateCloudBadge('warning', 'Ngoại tuyến / Lỗi mạng');
+        });
 
       } else {
         updateCloudBadge('warning', 'Chế độ Local');
