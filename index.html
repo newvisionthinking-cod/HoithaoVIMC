@@ -78,22 +78,26 @@
           <div id="expenseChevron" class="text-rose-500 font-bold text-sm transition-transform duration-200">▼</div>
         </button>
 
-        <div id="expenseBreakdown" class="hidden border-t border-rose-100 bg-white px-4 py-3 space-y-2 text-xs divide-y divide-slate-100">
+<div id="expenseBreakdown" class="hidden border-t border-rose-100 bg-white px-4 py-3 space-y-2 text-xs divide-y divide-slate-100">
           <div class="flex justify-between items-center pt-1.5 first:pt-0">
-            <span class="text-slate-600 flex items-center gap-1.5"><span>⚽</span> Chi Bóng Đá:</span>
+            <span class="text-slate-600 flex items-center gap-1.5">
+              <span>⚽</span> Chi Bóng Đá <span id="fbCountBadge" class="text-[11px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded font-normal">(0 GD)</span>:
+            </span>
             <span id="footballExpense" class="font-bold text-slate-800 text-sm">0 đ</span>
           </div>
           <div class="flex justify-between items-center pt-1.5">
-            <span class="text-slate-600 flex items-center gap-1.5"><span>🏓</span> Chi Pickleball:</span>
+            <span class="text-slate-600 flex items-center gap-1.5">
+              <span>🏓</span> Chi Pickleball <span id="pbCountBadge" class="text-[11px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded font-normal">(0 GD)</span>:
+            </span>
             <span id="pickleballExpense" class="font-bold text-slate-800 text-sm">0 đ</span>
           </div>
           <div class="flex justify-between items-center pt-1.5">
-            <span class="text-slate-600 flex items-center gap-1.5"><span>📋</span> Chi Khác:</span>
+            <span class="text-slate-600 flex items-center gap-1.5">
+              <span>📋</span> Chi Khác <span id="otherCountBadge" class="text-[11px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded font-normal">(0 GD)</span>:
+            </span>
             <span id="otherExpense" class="font-bold text-slate-800 text-sm">0 đ</span>
           </div>
         </div>
-      </div>
-    </div>
 
     <!-- Banner Số Dư Còn Lại -->
     <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 sm:p-5 rounded-2xl shadow-md mb-5 flex items-center justify-between">
@@ -108,11 +112,11 @@
 
     <!-- Danh Sách Chi Phí -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="flex border-b border-slate-200 text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2 overflow-x-auto">
-        <button onclick="filterCategory('ALL')" id="tab-ALL" class="tab-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap">Tất Cả</button>
-        <button onclick="filterCategory('Bóng đá')" id="tab-Bóng đá" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">⚽ Bóng Đá</button>
-        <button onclick="filterCategory('Pickleball')" id="tab-Pickleball" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">🏓 Pickleball</button>
-        <button onclick="filterCategory('Khác')" id="tab-Khác" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">📋 Khác</button>
+     <div class="flex border-b border-slate-200 text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2 overflow-x-auto">
+        <button onclick="filterCategory('ALL')" id="tab-ALL" class="tab-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap">Tất Cả (<span id="tabCount-ALL">0</span>)</button>
+        <button onclick="filterCategory('Bóng đá')" id="tab-Bóng đá" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">⚽ Bóng Đá (<span id="tabCount-Bóng đá">0</span>)</button>
+        <button onclick="filterCategory('Pickleball')" id="tab-Pickleball" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">🏓 Pickleball (<span id="tabCount-Pickleball">0</span>)</button>
+        <button onclick="filterCategory('Khác')" id="tab-Khác" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">📋 Khác (<span id="tabCount-Khác">0</span>)</button>
       </div>
 
       <div class="hidden md:block overflow-x-auto">
@@ -479,8 +483,10 @@
       }
     }
 
-    function calculateSummary() {
-      let totalAdvance = 0, totalExpense = 0, fbExpense = 0, pbExpense = 0, otherExpense = 0;
+   function calculateSummary() {
+      let totalAdvance = 0, totalExpense = 0;
+      let fbExpense = 0, pbExpense = 0, otherExpense = 0;
+      let fbTxCount = 0, pbTxCount = 0, otherTxCount = 0;
 
       transactions.forEach(t => {
         const amt = Number(t.amount) || 0;
@@ -488,18 +494,38 @@
           totalAdvance += amt;
         } else {
           totalExpense += amt;
-          if (t.category === 'Bóng đá') fbExpense += amt;
-          else if (t.category === 'Pickleball') pbExpense += amt;
-          else otherExpense += amt;
+          if (t.category === 'Bóng đá') {
+            fbExpense += amt;
+            fbTxCount++;
+          } else if (t.category === 'Pickleball') {
+            pbExpense += amt;
+            pbTxCount++;
+          } else {
+            otherExpense += amt;
+            otherTxCount++;
+          }
         }
       });
 
+      // Cập nhật số tiền
       if (document.getElementById('totalAdvance')) document.getElementById('totalAdvance').textContent = fmt(totalAdvance);
       if (document.getElementById('totalExpense')) document.getElementById('totalExpense').textContent = fmt(totalExpense);
       if (document.getElementById('footballExpense')) document.getElementById('footballExpense').textContent = fmt(fbExpense);
       if (document.getElementById('pickleballExpense')) document.getElementById('pickleballExpense').textContent = fmt(pbExpense);
       if (document.getElementById('otherExpense')) document.getElementById('otherExpense').textContent = fmt(otherExpense);
       
+      // Cập nhật số lượng giao dịch trong bảng chi tiết
+      if (document.getElementById('fbCountBadge')) document.getElementById('fbCountBadge').textContent = `(${fbTxCount} GD)`;
+      if (document.getElementById('pbCountBadge')) document.getElementById('pbCountBadge').textContent = `(${pbTxCount} GD)`;
+      if (document.getElementById('otherCountBadge')) document.getElementById('otherCountBadge').textContent = `(${otherTxCount} GD)`;
+
+      // Cập nhật số lượng giao dịch trên các nút Tab
+      if (document.getElementById('tabCount-ALL')) document.getElementById('tabCount-ALL').textContent = transactions.length;
+      if (document.getElementById('tabCount-Bóng đá')) document.getElementById('tabCount-Bóng đá').textContent = transactions.filter(t => t.category === 'Bóng đá').length;
+      if (document.getElementById('tabCount-Pickleball')) document.getElementById('tabCount-Pickleball').textContent = transactions.filter(t => t.category === 'Pickleball').length;
+      if (document.getElementById('tabCount-Khác')) document.getElementById('tabCount-Khác').textContent = transactions.filter(t => t.category === 'Khác').length;
+
+      // Cập nhật số dư còn lại
       const remaining = totalAdvance - totalExpense;
       const remEl = document.getElementById('remainingFund');
       if (remEl) {
