@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Quản Lý Hội Thao VIMC - Chi Phí & Vận Động Viên</title>
+  <title>Vinaship - Hội thao VIMC - Chi Phí & Vận Động Viên</title>
   <script src="https://cdn.tailwindcss.com"></script>
   
   <!-- Firebase SDK v8.10.1 -->
@@ -22,10 +22,10 @@
 
   <!-- Header -->
   <header class="bg-blue-800 text-white shadow-md sticky top-0 z-30">
-    <div class="max-w-5xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <div class="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
       <div class="flex items-center justify-between">
         <div>
-          <span class="text-[10px] uppercase tracking-wider bg-blue-700 text-blue-100 px-2 py-0.5 rounded font-medium">Vinaship - Hội Thao VIMC</span>
+          <span class="text-[11px] font-semibold tracking-wide bg-blue-700/80 text-blue-100 px-2.5 py-0.5 rounded">Vinaship - Hội thao VIMC</span>
           <h1 class="text-base sm:text-xl font-bold mt-0.5">Quản Lý Đội Thể Thao & Chi Phí</h1>
         </div>
         <span id="cloudBadge" class="text-[11px] bg-amber-500/20 text-amber-200 border border-amber-400/30 px-2 py-0.5 rounded-full flex items-center gap-1 sm:hidden">
@@ -44,7 +44,7 @@
 
     <!-- Thanh Điều Hướng 2 Phân Hệ -->
     <div class="bg-blue-900/80 px-4 py-1.5 border-t border-blue-700/50">
-      <div class="max-w-5xl mx-auto flex gap-2 text-xs sm:text-sm font-medium">
+      <div class="max-w-6xl mx-auto flex gap-2 text-xs sm:text-sm font-medium">
         <button onclick="switchMainTab('EXPENSES')" id="nav-btn-expenses" class="nav-btn px-3 py-1.5 rounded-lg text-blue-100 hover:text-white transition flex items-center gap-1.5 nav-btn-active">
           <span>💰</span> Sổ Chi Tiêu & Quỹ
         </button>
@@ -56,53 +56,57 @@
   </header>
 
   <!-- ==================== PHÂN HỆ 1: CHI PHÍ ==================== -->
-  <section id="sectionExpenses" class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6">
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
-        <div>
-          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng Tạm Ứng</span>
-          <p id="totalAdvance" class="text-xl sm:text-2xl font-bold text-blue-600 mt-1">0 đ</p>
-        </div>
+  <section id="sectionExpenses" class="max-w-6xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6">
+    <!-- 2 Thẻ Tóm Tắt (Ngang bằng nhau) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 items-start">
+      <!-- Thẻ Tổng Tạm Ứng -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">TỔNG TẠM ỨNG</span>
+        <p id="totalAdvance" class="text-xl sm:text-2xl font-bold text-blue-600 mt-1">0 đ</p>
         <p class="text-[11px] text-slate-400 mt-2">Nguồn kinh phí đã nhận</p>
       </div>
 
+      <!-- Thẻ Tổng Đã Chi (Có menu mở rộng xem chi tiết) -->
       <div class="bg-white rounded-xl shadow-sm border border-rose-200 overflow-hidden">
         <button type="button" onclick="toggleExpenseBreakdown()" class="w-full p-4 text-left flex items-start justify-between bg-rose-50/40 hover:bg-rose-50/80 transition">
           <div>
             <div class="flex items-center gap-2">
-              <span class="text-xs font-semibold text-rose-700 uppercase tracking-wider">Tổng Đã Chi</span>
+              <span class="text-xs font-semibold text-rose-700 uppercase tracking-wider">TỔNG ĐÃ CHI</span>
               <span class="text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-medium">Bấm xem chi tiết</span>
             </div>
             <p id="totalExpense" class="text-xl sm:text-2xl font-bold text-rose-600 mt-1">0 đ</p>
           </div>
-          <div id="expenseChevron" class="text-rose-500 font-bold text-sm transition-transform duration-200">▼</div>
+          <div id="expenseChevron" class="text-rose-500 font-bold text-sm transition-transform duration-200">▲</div>
         </button>
 
-<div id="expenseBreakdown" class="hidden border-t border-rose-100 bg-white px-4 py-3 space-y-2 text-xs divide-y divide-slate-100">
+        <!-- Bảng chi tiết từng môn kèm số giao dịch (GD) -->
+        <div id="expenseBreakdown" class="border-t border-rose-100 bg-white px-4 py-3 space-y-2 text-xs divide-y divide-slate-100">
           <div class="flex justify-between items-center pt-1.5 first:pt-0">
             <span class="text-slate-600 flex items-center gap-1.5">
-              <span>⚽</span> Chi Bóng Đá <span id="fbCountBadge" class="text-[11px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded font-normal">(0 GD)</span>:
+              <span>⚽</span> Chi Bóng Đá <span id="fbCountBadge" class="text-[11px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">(0 GD)</span>:
             </span>
             <span id="footballExpense" class="font-bold text-slate-800 text-sm">0 đ</span>
           </div>
           <div class="flex justify-between items-center pt-1.5">
             <span class="text-slate-600 flex items-center gap-1.5">
-              <span>🏓</span> Chi Pickleball <span id="pbCountBadge" class="text-[11px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded font-normal">(0 GD)</span>:
+              <span>🏓</span> Chi Pickleball <span id="pbCountBadge" class="text-[11px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">(0 GD)</span>:
             </span>
             <span id="pickleballExpense" class="font-bold text-slate-800 text-sm">0 đ</span>
           </div>
           <div class="flex justify-between items-center pt-1.5">
             <span class="text-slate-600 flex items-center gap-1.5">
-              <span>📋</span> Chi Khác <span id="otherCountBadge" class="text-[11px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded font-normal">(0 GD)</span>:
+              <span>📋</span> Chi Khác <span id="otherCountBadge" class="text-[11px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">(0 GD)</span>:
             </span>
             <span id="otherExpense" class="font-bold text-slate-800 text-sm">0 đ</span>
           </div>
         </div>
+      </div>
+    </div>
 
-    <!-- Banner Số Dư Còn Lại -->
+    <!-- Banner Số Dư Còn Lại & Nút Thêm Giao Dịch -->
     <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 sm:p-5 rounded-2xl shadow-md mb-5 flex items-center justify-between">
       <div>
-        <p class="text-xs uppercase font-medium text-blue-200 tracking-wider">Số Tiền Còn Lại</p>
+        <p class="text-xs uppercase font-medium text-blue-200 tracking-wider">SỐ TIỀN CÒN LẠI</p>
         <p id="remainingFund" class="text-2xl sm:text-3xl font-extrabold mt-0.5">0 đ</p>
       </div>
       <button onclick="openModal()" class="bg-white text-blue-800 hover:bg-blue-50 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1">
@@ -110,35 +114,47 @@
       </button>
     </div>
 
-    <!-- Danh Sách Chi Phí -->
+    <!-- Bảng Danh Sách Giao Dịch Toàn Chiều Ngang -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-     <div class="flex border-b border-slate-200 text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2 overflow-x-auto">
-        <button onclick="filterCategory('ALL')" id="tab-ALL" class="tab-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap">Tất Cả (<span id="tabCount-ALL">0</span>)</button>
-        <button onclick="filterCategory('Bóng đá')" id="tab-Bóng đá" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">⚽ Bóng Đá (<span id="tabCount-Bóng đá">0</span>)</button>
-        <button onclick="filterCategory('Pickleball')" id="tab-Pickleball" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">🏓 Pickleball (<span id="tabCount-Pickleball">0</span>)</button>
-        <button onclick="filterCategory('Khác')" id="tab-Khác" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">📋 Khác (<span id="tabCount-Khác">0</span>)</button>
+      <!-- Thanh Tab Lọc Kèm Số Giao Dịch -->
+      <div class="flex border-b border-slate-200 text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2 overflow-x-auto">
+        <button onclick="filterCategory('ALL')" id="tab-ALL" class="tab-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap">
+          Tất Cả (<span id="tabCount-ALL">0</span>)
+        </button>
+        <button onclick="filterCategory('Bóng đá')" id="tab-Bóng đá" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">
+          ⚽ Bóng Đá (<span id="tabCount-Bóng đá">0</span>)
+        </button>
+        <button onclick="filterCategory('Pickleball')" id="tab-Pickleball" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap text-indigo-700">
+          🏓 Pickleball (<span id="tabCount-Pickleball">0</span>)
+        </button>
+        <button onclick="filterCategory('Khác')" id="tab-Khác" class="tab-btn py-3 px-3 sm:px-4 whitespace-nowrap">
+          📋 Khác (<span id="tabCount-Khác">0</span>)
+        </button>
       </div>
 
+      <!-- Bảng Desktop -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-left text-sm">
           <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
             <tr>
-              <th class="py-3 px-4 font-semibold">Ngày</th>
-              <th class="py-3 px-4 font-semibold">Loại</th>
-              <th class="py-3 px-4 font-semibold">Bộ Môn</th>
+              <th class="py-3 px-4 font-semibold whitespace-nowrap">Ngày</th>
+              <th class="py-3 px-4 font-semibold whitespace-nowrap">Loại</th>
+              <th class="py-3 px-4 font-semibold whitespace-nowrap">Bộ Môn</th>
               <th class="py-3 px-4 font-semibold">Nội Dung</th>
               <th class="py-3 px-4 font-semibold">Chi Cho Ai</th>
               <th class="py-3 px-4 font-semibold">Chứng Từ</th>
-              <th class="py-3 px-4 font-semibold text-right">Số Tiền</th>
-              <th class="py-3 px-4 font-semibold text-center">Thao Tác</th>
+              <th class="py-3 px-4 font-semibold text-right whitespace-nowrap">Số Tiền</th>
+              <th class="py-3 px-4 font-semibold text-center whitespace-nowrap">Thao Tác</th>
             </tr>
           </thead>
           <tbody id="txTableDesktop" class="divide-y divide-slate-100"></tbody>
         </table>
       </div>
 
+      <!-- Danh Sách Mobile -->
       <div id="txListMobile" class="md:hidden divide-y divide-slate-100"></div>
 
+      <!-- Trạng thái trống -->
       <div id="emptyState" class="hidden text-center py-12 text-slate-400">
         <p class="text-sm">Chưa có giao dịch nào được lưu.</p>
       </div>
@@ -146,7 +162,7 @@
   </section>
 
   <!-- ==================== PHÂN HỆ 2: VẬN ĐỘNG VIÊN ==================== -->
-  <section id="sectionAthletes" class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6 hidden">
+  <section id="sectionAthletes" class="max-w-6xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6 hidden">
     <!-- 3 Thẻ Thống Kê Cân Đối -->
     <div class="grid grid-cols-3 gap-2.5 sm:gap-3 mb-4">
       <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 text-center">
@@ -177,7 +193,7 @@
       </button>
     </div>
 
-    <!-- Bộ Lọc VĐV RÕ RÀNG, ĐƠN GIẢN, KHÔNG DROPDOWN PHỨC TẠP -->
+    <!-- Bộ Lọc VĐV Đơn Giản 3 Mục -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="flex items-center border-b border-slate-200 text-xs sm:text-sm font-medium text-slate-600 px-3 sm:px-4 pt-2">
         <button onclick="selectAthleteFilter('ALL')" id="tabAth-ALL" class="tabAth-btn py-3 px-3 sm:px-4 tab-active whitespace-nowrap transition">
@@ -191,7 +207,7 @@
         </button>
       </div>
 
-      <!-- Bảng Desktop VĐV (Tự co giãn, xuống dòng tự nhiên) -->
+      <!-- Bảng Desktop VĐV -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-left text-sm">
           <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
@@ -200,7 +216,7 @@
               <th class="py-3 px-3 font-semibold">Họ Và Tên</th>
               <th class="py-3 px-3 font-semibold">Môn Thi Đấu</th>
               <th class="py-3 px-3 font-semibold">Nội Dung Tham Gia</th>
-              <th class="py-3 px-3 font-semibold">Năm Sinh (Tuổi)</th>
+              <th class="py-3 px-4 font-semibold">Năm Sinh (Tuổi)</th>
               <th class="py-3 px-3 font-semibold">Mã Số BHXH</th>
               <th class="py-3 px-3 font-semibold">Ghi Chú / Bạn Đôi</th>
               <th class="py-3 px-3 font-semibold text-center w-24">Thao Tác</th>
@@ -213,7 +229,6 @@
       <!-- Danh Sách Mobile VĐV -->
       <div id="athleteListMobile" class="md:hidden divide-y divide-slate-100"></div>
 
-      <!-- Trạng Thái Trống -->
       <div id="athleteEmptyState" class="hidden text-center py-12 text-slate-400">
         <p class="text-sm">Chưa có vận động viên nào trong danh mục này.</p>
       </div>
@@ -318,7 +333,6 @@
           </select>
         </div>
 
-        <!-- Khung chọn nội dung Pickleball -->
         <div id="pickleballEventsBox" class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2">
           <label class="block font-semibold text-indigo-900 text-xs">Nội dung Pickleball (Tích chọn nội dung):</label>
           <div class="grid grid-cols-2 gap-2 text-xs">
@@ -476,14 +490,20 @@
       const isHidden = breakdown.classList.contains('hidden');
       if (isHidden) {
         breakdown.classList.remove('hidden');
-        if (chevron) chevron.style.transform = 'rotate(180deg)';
+        if (chevron) {
+          chevron.textContent = '▲';
+          chevron.style.transform = 'rotate(0deg)';
+        }
       } else {
         breakdown.classList.add('hidden');
-        if (chevron) chevron.style.transform = 'rotate(0deg)';
+        if (chevron) {
+          chevron.textContent = '▼';
+          chevron.style.transform = 'rotate(0deg)';
+        }
       }
     }
 
-   function calculateSummary() {
+    function calculateSummary() {
       let totalAdvance = 0, totalExpense = 0;
       let fbExpense = 0, pbExpense = 0, otherExpense = 0;
       let fbTxCount = 0, pbTxCount = 0, otherTxCount = 0;
@@ -507,25 +527,21 @@
         }
       });
 
-      // Cập nhật số tiền
       if (document.getElementById('totalAdvance')) document.getElementById('totalAdvance').textContent = fmt(totalAdvance);
       if (document.getElementById('totalExpense')) document.getElementById('totalExpense').textContent = fmt(totalExpense);
       if (document.getElementById('footballExpense')) document.getElementById('footballExpense').textContent = fmt(fbExpense);
       if (document.getElementById('pickleballExpense')) document.getElementById('pickleballExpense').textContent = fmt(pbExpense);
       if (document.getElementById('otherExpense')) document.getElementById('otherExpense').textContent = fmt(otherExpense);
       
-      // Cập nhật số lượng giao dịch trong bảng chi tiết
       if (document.getElementById('fbCountBadge')) document.getElementById('fbCountBadge').textContent = `(${fbTxCount} GD)`;
       if (document.getElementById('pbCountBadge')) document.getElementById('pbCountBadge').textContent = `(${pbTxCount} GD)`;
       if (document.getElementById('otherCountBadge')) document.getElementById('otherCountBadge').textContent = `(${otherTxCount} GD)`;
 
-      // Cập nhật số lượng giao dịch trên các nút Tab
       if (document.getElementById('tabCount-ALL')) document.getElementById('tabCount-ALL').textContent = transactions.length;
       if (document.getElementById('tabCount-Bóng đá')) document.getElementById('tabCount-Bóng đá').textContent = transactions.filter(t => t.category === 'Bóng đá').length;
       if (document.getElementById('tabCount-Pickleball')) document.getElementById('tabCount-Pickleball').textContent = transactions.filter(t => t.category === 'Pickleball').length;
       if (document.getElementById('tabCount-Khác')) document.getElementById('tabCount-Khác').textContent = transactions.filter(t => t.category === 'Khác').length;
 
-      // Cập nhật số dư còn lại
       const remaining = totalAdvance - totalExpense;
       const remEl = document.getElementById('remainingFund');
       if (remEl) {
@@ -557,11 +573,11 @@
       filtered.forEach(item => {
         const isExp = item.type === 'EXPENSE';
         const typeBadge = isExp 
-          ? '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-100">Chi</span>'
-          : '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">Tạm ứng</span>';
+          ? '<span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-100">Chi</span>'
+          : '<span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">Tạm ứng</span>';
 
         const catIcon = item.category === 'Bóng đá' ? '⚽ Bóng đá' : item.category === 'Pickleball' ? '🏓 Pickleball' : '📋 Khác';
-        const catBadge = `<span class="text-xs px-2 py-0.5 rounded-full font-medium ${
+        const catBadge = `<span class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${
           item.category === 'Bóng đá' ? 'bg-amber-100 text-amber-800' : 
           item.category === 'Pickleball' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-700'
         }">${catIcon}</span>`;
@@ -575,21 +591,21 @@
                 </button>
               `).join('')}
             </div>`
-          : `<span class="text-slate-300 text-xs italic">Không có</span>`;
+          : `<span class="text-slate-400 text-xs italic">Không có</span>`;
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/70 transition';
         tr.innerHTML = `
-          <td class="py-3 px-4 text-slate-500 font-mono text-xs">${item.date || '-'}</td>
-          <td class="py-3 px-4">${typeBadge}</td>
-          <td class="py-3 px-4">${catBadge}</td>
-          <td class="py-3 px-4 font-medium text-slate-800">${item.description || '-'}</td>
-          <td class="py-3 px-4 text-slate-600">${item.person || '-'}</td>
+          <td class="py-3 px-4 text-slate-600 font-mono text-xs whitespace-nowrap">${item.date || '-'}</td>
+          <td class="py-3 px-4 whitespace-nowrap">${typeBadge}</td>
+          <td class="py-3 px-4 whitespace-nowrap">${catBadge}</td>
+          <td class="py-3 px-4 font-medium text-slate-800 leading-snug">${item.description || '-'}</td>
+          <td class="py-3 px-4 text-slate-700 leading-snug">${item.person || '-'}</td>
           <td class="py-3 px-4">${fileBadgesHtml}</td>
-          <td class="py-3 px-4 text-right font-semibold ${isExp ? 'text-rose-600' : 'text-emerald-600'}">
+          <td class="py-3 px-4 text-right font-bold whitespace-nowrap ${isExp ? 'text-rose-600' : 'text-emerald-600'}">
             ${isExp ? '-' : '+'}${fmt(item.amount || 0)}
           </td>
-          <td class="py-3 px-4 text-center">
+          <td class="py-3 px-4 text-center whitespace-nowrap">
             <div class="flex items-center justify-center gap-1.5">
               <button onclick="editTx('${item.id}')" class="text-blue-600 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50">✏️ Sửa</button>
               <button onclick="deleteTx('${item.id}')" class="text-rose-600 font-medium text-xs px-2 py-1 rounded hover:bg-rose-50">🗑️ Xoá</button>
@@ -834,7 +850,7 @@
       }
     }
 
-    // ==================== PHẦN VẬN ĐỘNG VIÊN: 3 TAB DUY NHẤT ====================
+    // ==================== PHẦN VẬN ĐỘNG VIÊN ====================
     function selectAthleteFilter(cat) {
       currentAthleteFilter = cat;
       document.querySelectorAll('.tabAth-btn').forEach(b => b.classList.remove('tab-active'));
@@ -854,7 +870,6 @@
       }
     }
 
-    // Lấy danh sách nội dung thi đấu hiển thị
     function getDisplayEvents(ath) {
       if (!ath) return [];
       let list = [];
@@ -866,7 +881,6 @@
         list = ath.event.split(/[,;+]/);
       }
 
-      // Chuẩn hóa tên nhãn hiển thị
       return list.map(item => {
         let str = String(item).trim();
         if (str === 'doi_nam_nu' || str.toLowerCase().includes('nam nữ') || str.toLowerCase().includes('nam nu')) return 'Đôi nam nữ';
@@ -885,7 +899,6 @@
 
       if (!tbody || !mobileList) return;
 
-      // 1. Thống kê quân số duy nhất dựa theo mã BHXH
       const allUniqueInsurances = new Set();
       const footballInsurances = new Set();
       const pickleballInsurances = new Set();
@@ -910,7 +923,6 @@
       if (document.getElementById('statPickleballAthletes')) document.getElementById('statPickleballAthletes').textContent = pickleballInsurances.size;
       if (document.getElementById('athleteCountHeader')) document.getElementById('athleteCountHeader').textContent = allUniqueInsurances.size;
 
-      // 2. Lọc danh sách cực kỳ đơn giản & không bao giờ lỗi
       const filtered = athletes.filter(a => {
         if (!a) return false;
         if (currentAthleteFilter === 'ALL') return true;
@@ -936,7 +948,6 @@
 
       const currentYear = new Date().getFullYear();
 
-      // 3. Render danh sách
       filtered.forEach((ath, idx) => {
         const athId = String(ath.id || idx);
         const athName = ath.name || 'Chưa đặt tên';
@@ -967,7 +978,6 @@
           eventsBadgesHtml = '<span class="text-xs text-slate-400 italic">Chưa xếp nội dung</span>';
         }
 
-        // Bảng Desktop
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition';
         tr.innerHTML = `
@@ -975,7 +985,7 @@
           <td class="py-3 px-3 font-bold text-slate-800">${athName}</td>
           <td class="py-3 px-3">${catBadge}</td>
           <td class="py-3 px-3">${eventsBadgesHtml}</td>
-          <td class="py-3 px-3 text-slate-700 font-medium">${athYear || '-'} <span class="text-xs text-slate-400">(${age} tuổi)</span></td>
+          <td class="py-3 px-4 text-slate-700 font-medium">${athYear || '-'} <span class="text-xs text-slate-400">(${age} tuổi)</span></td>
           <td class="py-3 px-3 font-mono font-semibold text-blue-700">${athIns}</td>
           <td class="py-3 px-3 text-slate-600 text-xs">${athNotes}</td>
           <td class="py-3 px-3 text-center">
@@ -985,9 +995,8 @@
             </div>
           </td>
         `;
-        tbody.appendChild(tr);
+        tbodyDesktop.appendChild(tr);
 
-        // Mobile Card
         const card = document.createElement('div');
         card.className = 'p-3.5 flex flex-col gap-1.5 hover:bg-slate-50';
         card.innerHTML = `
@@ -1175,7 +1184,7 @@
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Chi_Phi");
-      XLSX.writeFile(wb, `Bao_Cao_Chi_Phi_Hoi_Thao_${new Date().toISOString().slice(0,10)}.xlsx`);
+      XLSX.writeFile(wb, `Bao_Cao_Chi_Phi_Vinaship_Hoi_Thao_VIMC_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
     function exportAthletesExcel() {
@@ -1201,7 +1210,7 @@
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Danh_Sach_VDV");
-      XLSX.writeFile(wb, `Danh_Sach_VDV_Hoi_Thao_${new Date().toISOString().slice(0,10)}.xlsx`);
+      XLSX.writeFile(wb, `Danh_Sach_VDV_Vinaship_Hoi_Thao_VIMC_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
     function previewFile(txId, idx) {
@@ -1222,7 +1231,7 @@
       } else {
         body.innerHTML = `
           <div class="text-center p-4">
-            <p class="text-4xl mb-2">${file.type && file.type.includes('pdf') ? '📄' : '📝'}</p>
+            <p class="text-4xl mb-2">${file.type && file.type.includes('pdf') ? '📄' : '📝'}</span>
             <p class="font-medium text-xs text-slate-700 mb-2">${file.name}</p>
             <p class="text-[11px] text-slate-400">Bấm nút bên dưới để tải tệp về xem.</p>
           </div>
