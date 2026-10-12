@@ -870,9 +870,11 @@
       }
     }
 
+    // HÀM BÓC TÁCH NỘI DUNG VĐV: HỖ TRỢ 100% CÁC KIỂU DỮ LIỆU ĐÃ LƯU TỪ TRƯỚC TỚI NAY
     function getDisplayEvents(ath) {
       if (!ath) return [];
       let list = [];
+
       if (Array.isArray(ath.events)) {
         list = ath.events;
       } else if (typeof ath.events === 'string' && ath.events.trim()) {
@@ -881,15 +883,28 @@
         list = ath.event.split(/[,;+]/);
       }
 
-      return list.map(item => {
-        let str = String(item).trim();
-        if (str === 'doi_nam_nu' || str.toLowerCase().includes('nam nữ') || str.toLowerCase().includes('nam nu')) return 'Đôi nam nữ';
-        if (str === 'doi_nu' || str.toLowerCase().includes('đôi nữ') || str.toLowerCase().includes('doi nu')) return 'Đôi nữ';
-        if (str === 'doi_nam' || str.toLowerCase().includes('đôi nam') || str.toLowerCase().includes('doi nam')) return 'Đôi nam';
-        if (str === 'don_nam' || str.toLowerCase().includes('đơn nam')) return 'Đơn nam';
-        if (str === 'don_nu' || str.toLowerCase().includes('đơn nữ')) return 'Đơn nữ';
-        return str;
-      }).filter(Boolean);
+      const results = new Set();
+      list.forEach(item => {
+        let str = String(item).trim().toLowerCase().replace(/[🎾👭👫⚽🏓\[\]\(\)]/g, '').trim();
+        if (!str) return;
+
+        if (str === 'doi_nam_nu' || str.includes('nam nữ') || str.includes('nam nu')) {
+          results.add('Đôi nam nữ');
+        } else if (str === 'doi_nu' || (str.includes('nữ') && !str.includes('nam')) || (str.includes('nu') && !str.includes('nam'))) {
+          results.add('Đôi nữ');
+        } else if (str === 'doi_nam' || (str.includes('đôi nam') && !str.includes('nữ')) || (str.includes('doi nam') && !str.includes('nu'))) {
+          results.add('Đôi nam');
+        } else if (str === 'don_nam' || str.includes('đơn nam') || str.includes('don nam')) {
+          results.add('Đơn nam');
+        } else if (str === 'don_nu' || str.includes('đơn nữ') || str.includes('don nu')) {
+          results.add('Đơn nữ');
+        } else {
+          // Giữ nguyên nhãn nếu đã là tiếng Việt sẵn
+          results.add(String(item).trim());
+        }
+      });
+
+      return Array.from(results);
     }
 
     function renderAthletes() {
@@ -995,7 +1010,7 @@
             </div>
           </td>
         `;
-        tbodyDesktop.appendChild(tr);
+        tbody.appendChild(tr);
 
         const card = document.createElement('div');
         card.className = 'p-3.5 flex flex-col gap-1.5 hover:bg-slate-50';
@@ -1282,17 +1297,15 @@
           updateCloudBadge('warning', 'Ngoại tuyến / Lỗi mạng');
         });
 
-        // 2. Lắng nghe vận động viên
+      // 2. Lắng nghe vận động viên
         db.collection("athletes").onSnapshot((snapshot) => {
           const cloudAth = [];
           snapshot.forEach(doc => {
             cloudAth.push({ id: doc.id, ...doc.data() });
           });
-          if (cloudAth.length > 0) {
-            athletes = cloudAth;
-            localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
-            renderAthletes();
-          }
+          athletes = cloudAth;
+          localStorage.setItem(ATHLETES_STORAGE_KEY, JSON.stringify(athletes));
+          renderAthletes(); // Vẽ lại ngay lập tức
           athletesLoaded = true;
           checkSyncStatus();
         }, err => {
